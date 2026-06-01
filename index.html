@@ -296,7 +296,8 @@ async function loadNotice(){
 
   for(let i=data.length-1;i>=1;i--){
 
-    const itemHtml = `
+    // ✅ 리스트용 (삭제 버튼 포함)
+    const listHtml = `
       <div class="card">
         <h3>${data[i][1]}</h3>
         <p style="white-space:pre-line">${data[i][2]}</p>
@@ -305,18 +306,27 @@ async function loadNotice(){
 
         <br><br>
 
-        <!-- ✅ 삭제 버튼 -->
         <button onclick="deleteNotice('${data[i][0]}')" style="background:#c0392b;">
           삭제
         </button>
       </div>
     `;
 
-    html += itemHtml;
+    // ✅ 미리보기용 (삭제 버튼 없음)
+    const previewHtmlItem = `
+      <div class="card">
+        <h3>${data[i][1]}</h3>
+        <p style="white-space:pre-line">${data[i][2]}</p>
+        <small>${data[i][3]||""}</small><br>
+        ${data[i][4] ? `<a href="${data[i][4]}" target="_blank">첨부파일</a>` : ""}
+      </div>
+    `;
 
-    // ✅ 최신 2~3개 미리보기
+    html += listHtml;
+
+    // 최신 2~3개만 미리보기
     if(i > data.length - 4){
-      previewHtml += itemHtml;
+      previewHtml += previewHtmlItem;
     }
   }
 
