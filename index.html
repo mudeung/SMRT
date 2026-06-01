@@ -196,6 +196,7 @@ background:#f4f6f8;
 <nav>
     <a href="#about">주요 임무</a>
     <a href="#mission">구조대 상황판</a>
+    <a href="#notice">공지사항</a>
     <a href="#schedule">일정 공유</a>
     <a href="#contact">유관기관 연락처</a>
 </nav>
@@ -256,6 +257,120 @@ background:#f4f6f8;
 
 </section>
 
+
+<section id="board">
+
+<h2 class="section-title">게시판</h2>
+
+<div class="card">
+
+<input id="title"
+placeholder="제목"
+style="width:100%;padding:10px;margin-bottom:10px;">
+
+<textarea id="content"
+placeholder="내용"
+style="width:100%;height:150px;padding:10px;">
+</textarea>
+
+<button onclick="writePost()">
+글쓰기
+</button>
+
+</div>
+
+<br>
+
+<div id="boardList"></div>
+
+</section>
+
+
+<section id="notice">
+
+<h2 class="section-title">
+공지사항
+</h2>
+
+<div class="card">
+
+<input
+id="noticeTitle"
+placeholder="제목"
+style="
+width:100%;
+padding:10px;
+margin-bottom:10px;">
+
+<textarea
+id="noticeContent"
+placeholder="내용"
+style="
+width:100%;
+height:150px;
+padding:10px;
+margin-bottom:10px;">
+</textarea>
+
+<button onclick="writeNotice()">
+공지 등록
+</button>
+
+</div>
+
+<br>
+
+<div id="noticeList"></div>
+
+</section>
+ 
+
+<section id="notice">
+
+<h2 class="section-title">
+공지사항
+</h2>
+
+<div class="card">
+
+<input
+id="noticeTitle"
+placeholder="공지 제목"
+style="
+width:100%;
+padding:10px;
+margin-bottom:10px;">
+
+<textarea
+id="noticeContent"
+placeholder="공지 내용"
+style="
+width:100%;
+height:150px;
+padding:10px;
+margin-bottom:10px;">
+</textarea>
+
+<input
+type="file"
+id="noticeFile"
+accept=".jpg,.jpeg,.png,.pdf"
+style="margin-bottom:10px;">
+
+<button onclick="writeNotice()">
+공지 등록
+</button>
+
+</div>
+
+<br>
+
+<div id="noticeList"></div>
+
+</section>
+
+    
+    
 <section id="schedule">
     <h2 class="section-title">일정 공유</h2>
 
@@ -337,6 +452,60 @@ function logout() {
 
 }    
 
+const API =
+"https://script.google.com/macros/s/AKfycbx0RIpxdlgEZVA3CBjVLT1SWhH7cYOLePudYd1n_o_x2D3HaaD-FXLQk-_5D-aooQG0/exec";
+
+async function loadBoard(){
+
+    const res = await fetch(API);
+    const data = await res.json();
+
+    let html = "";
+
+    for(let i=data.length-1; i>=1; i--){
+
+        html += `
+        <div class="card">
+            <h3>${data[i][1]}</h3>
+            <p>${data[i][2]}</p>
+            <small>
+            작성자 : ${data[i][3]}
+            </small>
+        </div>
+        <br>
+        `;
+    }
+
+    document.getElementById("boardList")
+    .innerHTML = html;
+}
+
+async function writePost(){
+
+    const title =
+    document.getElementById("title").value;
+
+    const content =
+    document.getElementById("content").value;
+
+    const writer = "구조대";
+
+    await fetch(API,{
+        method:"POST",
+        body:JSON.stringify({
+            title,
+            content,
+            writer
+        })
+    });
+
+    alert("등록 완료");
+
+    loadBoard();
+}
+
+window.addEventListener("load", loadBoard);
+    
 </script>
     
 </body>
