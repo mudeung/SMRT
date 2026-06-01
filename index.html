@@ -81,6 +81,14 @@ button{
     cursor:pointer;
 }
 
+/* MAP */
+#map{
+    width:100%;
+    height:400px;
+    border-radius:10px;
+    margin-bottom:15px;
+}
+
 /* CALENDAR */
 .calendar-wrap{
     width:100%;
@@ -123,7 +131,6 @@ footer{
         <input id="password" type="password" placeholder="비밀번호" style="width:100%;padding:10px;margin-top:10px;">
 
         <button onclick="login()" style="width:100%;">로그인</button>
-
         <p id="loginMsg" style="color:red;text-align:center;margin-top:10px;"></p>
     </div>
 </div>
@@ -139,294 +146,122 @@ footer{
 </header>
 
 <nav>
-<a href="#about"></a>
-<a href="#mission">구조 현황판</a>
-<a href="#notice">업무공지 게시판</a>
-<a href="#contact">유관기관 연락처</a>
+<a href="#mission">상황판</a>
+<a href="#notice">업무공지</a>
+<a href="#contact">유관기관</a>
 </nav>
+
+<!-- NOTICE PREVIEW -->
+<div id="noticePreview"></div>  
   
- <!-- 카카오맵 SDK -->
-<script src="https://dapi.kakao.com/v2/maps/sdk.js?appkey=ff9e145029506d6e4c72d1f2b01ea424&libraries=services"></script>  
-
-  <!-- 구조현황 -->
+<!-- TODAY -->
+<div class="today-box">
+  <h3>📌 오늘 일정</h3>
+  <div id="todaySchedule"></div>
+</div> 
+  
+<!-- MAP / RESCUE -->
 <section id="rescue">
-  <h2>🚨 실시간 구조현황</h2>
-
+  <h2 class="section-title">🚨 실시간 구조현황</h2>
   <div id="map"></div>
   <div id="listArea">로딩중...</div>
-</section> 
-  </div>
+</section>
 
+<!-- 알림 -->
 <audio id="alertSound">
   <source src="https://actions.google.com/sounds/v1/alarms/alarm_clock.ogg">
 </audio>
   
-<div class="container">
-  <div id="map"></div>
-</div>
-  
-  
-<!-- 게시글 미리보기 -->
-<div id="noticePreview"></div>    
-    
-<!-- 오늘 일정 -->
-<div class="today-box">
-  <h3>📌 오늘 일정</h3>
-  <div id="todaySchedule">로딩중...</div>
-</div>
-
-<!-- 캘린더 -->
-<section id="calendar">
-<h2 class="section-title">공유일정</h2> 
-<div class="calendar-wrap">
-  <iframe
-    src="https://calendar.google.com/calendar/embed?src=35f4e5ad17b2ce6c5ae379ff9dda889a46f1ee7928c82efdc9668a596da889fb%40group.calendar.google.com&ctz=Asia/Seoul&hl=ko">
-  </iframe>
-</div>
-
-</section>  
-    
-<!-- 구조 현황판 연동 --> 
+<!-- MISSION -->
 <section id="mission">
-    <h2 class="section-title">구조 현황판</h2>
+<h2 class="section-title">상황판</h2>
 
-<div class="cards">
-    <div class="card">
-        <h3>🆘 산악사고 상황관제 현황판</h3>
-        <div class="status">
-            <p>실시간 산악사고 신고 접수</p>
-            <button onclick="window.open(
-            'https://mudeung.github.io/rescue/callems.html',
-            '_blank',
-            'noopener,noreferrer'
-            )">
-                바로가기
-            </button>
-        </div>
-    </div>
-<br>
-    <div class="card">
-        <h3>📍 산악사고 위치 공유시스템</h3>
-
-        <div class="status">
-            <p>실시간 위치 공유 및 구조 요청</p>
-
-            <button onclick="window.open(
-            'https://mudeung.github.io/rescue/apk.html',
-            '_blank',
-            'noopener,noreferrer'
-            )">
-                바로가기
-            </button>
-        </div>
-    </div>
-</div>
-</section>  
-
-<!-- ✅ 공지사항 -->
-<section id="notice">
-<h2 class="section-title">업무공유 게시판</h2>
 <div class="card">
-<input id="noticeTitle" placeholder="제목"
-style="width:100%;padding:10px;margin-bottom:10px;">
-<textarea id="noticeContent"
-placeholder="내용"
-style="width:100%;height:150px;padding:10px;margin-bottom:10px;"></textarea>
-<input type="file" id="noticeFile" accept=".jpg,.jpeg,.png,.pdf">
-<button onclick="writeNotice()">업무공유 등록</button>
+<h3>🆘 산악사고 상황관제</h3>
+<button onclick="window.open('https://mudeung.github.io/rescue/callems.html','_blank')">바로가기</button>
 </div>
-    
-<br>   
-   
-<div id="noticeList"></div>
-</section>    
+
+<div class="card">
+<h3>📍 위치 공유 시스템</h3>
+<button onclick="window.open('https://mudeung.github.io/rescue/apk.html','_blank')">바로가기</button>
+</div>
+</section> 
   
-<!-- 유관기관 연락처 -->
+<!-- CALENDAR -->
+<section id="calendar">
+<h2 class="section-title">일정공유</h2>
+<div class="calendar-wrap">
+<iframe
+src="https://calendar.google.com/calendar/embed?src=35f4e5ad17b2ce6c5ae379ff9dda889a46f1ee7928c82efdc9668a596da889fb%40group.calendar.google.com&ctz=Asia/Seoul&hl=ko">
+</iframe>
+</div>
+</section>
+
+<!-- NOTICE -->
+<section id="notice">
+<h2 class="section-title">업무공지</h2>
+
+<div class="card">
+<input id="noticeTitle" placeholder="제목" style="width:100%;padding:10px;">
+<br><br>
+<textarea id="noticeContent" placeholder="내용" style="width:100%;height:120px;"></textarea>
+<br><br>
+<input type="file" id="noticeFile">
+<button onclick="writeNotice()">등록</button>
+</div>
+
+<div id="noticeList"></div>
+</section>
+
+<!-- CONTACT -->
 <section id="contact">
-<h2 class="section-title">유관기관 연락처</h2>
+<h2 class="section-title">유관기관</h2>
+
 <div class="card">
     <p><strong>재난상황실 :</strong> 062-230-2043</p>
     <p><strong>상황실 FAX :</strong> 062-230-2099</p>
     <p><strong>사무소 업무폰 :</strong> 010-3190-1187</p>
     <p><strong>원효분소 업무폰 :</strong> 010-8860-1187</p>
 </div>
-  <br>
+
 <div class="card">
     <p><strong>119산악구조대 사무실 :</strong> 062-606-4791</p>
     <p><strong>119산악구조대 업무폰 :</strong> 010-8002-0860</p>
 </div>
-</section>  
-  
+</section>
+
 <footer>
 © 2026 무등산국립공원 특수산악구조대는 산악사고, 조난자 구조, 응급처치, 수색 활동을 수행하며 24시간 대응체계를 유지하고 있습니다.
 </footer>
 
 </div>
 
+<!-- KAKAO MAP -->
+<script src="https://dapi.kakao.com/v2/maps/sdk.js?appkey=ff9e145029506d6e4c72d1f2b01ea424"></script>
+
 <script>
 /* ================= API ================= */
 const NOTICE_API = "https://script.google.com/macros/s/AKfycbx0RIpxdlgEZVA3CBjVLT1SWhH7cYOLePudYd1n_o_x2D3HaaD-FXLQk-_5D-aooQG0/exec";
 const RESCUE_API = "https://script.google.com/macros/s/AKfycbwUbacHm34YkWh--zL_e590P6h4S5wQo3iF8tCVZu71ZaTunTwdZ1TMLVqkyuHu-izW/exec";
 
-
-/* 로그인 */
+/* LOGIN */
 function login(){
+  const id = userid.value;
+  const pw = password.value;
 
-const id = userid.value;
-const pw = password.value;
-
-if(id==="rescue" && pw==="knps"){
+  if(id==="rescue" && pw==="knps"){
     sessionStorage.setItem("login","ok");
     loginPage.style.display="none";
     mainPage.style.display="block";
+    initMap();
     loadNotice();
-    loadPreview();
-}else{
+    loadRescue();
+  } else {
     loginMsg.textContent="로그인 실패";
-}
-}
-
-/* 공지 로드 */
-async function loadNotice(){
-
-const res = await fetch(API);
-const data = await res.json();
-
-let html="";
-
-for(let i=data.length-1;i>=1;i--){
-
-html += `
-<div class="card">
-<h3>${data[i][1]}</h3>
-<p style="white-space:pre-line">${data[i][2]}</p>
-
-<small>${data[i][3]}</small><br>
-
-${data[i][4] ? `<a href="${data[i][4]}" target="_blank">첨부파일</a>`:""}
-
-${sessionStorage.getItem("login")==="ok"
-? `<br><button onclick="deleteNotice('${data[i][0]}')">삭제</button>`:""}
-</div>`;
+  }
 }
 
-noticeList.innerHTML = html;
-}
-
-/* 업로드 */
-async function writeNotice(){
-
-const file = noticeFile.files[0];
-
-let fileUrl="";
-
-if(file){
-
-const reader = new FileReader();
-
-reader.onload = async function(){
-
-const base64 = reader.result.split(",")[1];
-
-const upload = await fetch(API,{
-method:"POST",
-body:JSON.stringify({
-mode:"upload",
-file:base64,
-name:file.name,
-type:file.type
-})
-});
-
-fileUrl = await upload.text();
-
-saveNotice(fileUrl);
-};
-
-reader.readAsDataURL(file);
-
-}else{
-saveNotice("");
-}
-}
-
-/* 저장 */
-async function saveNotice(fileUrl){
-
-await fetch(API,{
-method:"POST",
-body:JSON.stringify({
-title:noticeTitle.value,
-content:noticeContent.value,
-writer:"특수산악구조팀",
-file:fileUrl
-})
-});
-
-noticeTitle.value="";
-noticeContent.value="";
-noticeFile.value="";
-
-loadNotice();
-loadPreview();
-}
-
-/* 삭제 */
-async function deleteNotice(id){
-
-await fetch(API,{
-method:"POST",
-body:JSON.stringify({
-mode:"delete",
-id:id
-})
-});
-
-loadNotice();
-loadPreview();
-}
-
-/* 미리보기 */
-async function loadPreview(){
-
-const res = await fetch(API);
-const data = await res.json();
-
-let html="";
-
-for(let i=data.length-1;i>=1;i--){
-html += `
-<div class="card">
-<h3>📢 ${data[i][1]}</h3>
-<p>${data[i][2].substring(0,80)}...</p>
-<button onclick="location.href='#notice'">전체보기</button>
-</div>`;
-break;
-}
-
-document.getElementById("noticePreview").innerHTML = html;
-}
-
-/* 오늘 일정 */
-function loadTodaySchedule(){
-
-const today = new Date().toLocaleDateString();
-
-document.getElementById("todaySchedule").innerHTML =
-"📅 오늘 날짜: " + today;
-}
-
-window.addEventListener("load",()=>{
-if(sessionStorage.getItem("login")==="ok"){
-loginPage.style.display="none";
-mainPage.style.display="block";
-loadNotice();
-loadPreview();
-}
-loadTodaySchedule();
-});
- 
-/* ================= MAP ================= */
+/* MAP */
 let map, markers=[];
 
 function initMap(){
@@ -434,20 +269,79 @@ function initMap(){
     center:new kakao.maps.LatLng(35.1345,126.9902),
     level:6
   });
-}  
-  
-/* ================= RESCUE ================= */
-const listArea = document.getElementById("listArea");
-let knownIds=new Set();
-let firstLoad=true;
-
-function getElapsed(t,e=null){
-  const s=new Date(t);
-  const end=e?new Date(e):new Date();
-  const d=Math.floor((end-s)/1000);
-  return `${Math.floor(d/60)}분 ${d%60}초`;
 }
 
+/* NOTICE */
+async function loadNotice(){
+  const res = await fetch(NOTICE_API);
+  const data = await res.json();
+
+  let html="";
+
+  for(let i=data.length-1;i>=1;i--){
+    html += `
+      <div class="card">
+        <h3>${data[i][1]}</h3>
+        <p style="white-space:pre-line">${data[i][2]}</p>
+        <small>${data[i][3]||""}</small><br>
+        ${data[i][4] ? `<a href="${data[i][4]}" target="_blank">첨부파일</a>` : ""}
+      </div>
+    `;
+  }
+
+  noticeList.innerHTML = html;
+}
+
+/* NOTICE SAVE */
+async function writeNotice(){
+  const file = noticeFile.files[0];
+  let fileUrl="";
+
+  if(file){
+    const reader = new FileReader();
+
+    reader.onload = async function(){
+      const base64 = reader.result.split(",")[1];
+
+      const upload = await fetch(NOTICE_API,{
+        method:"POST",
+        body:JSON.stringify({
+          mode:"upload",
+          file:base64,
+          name:file.name,
+          type:file.type
+        })
+      });
+
+      fileUrl = await upload.text();
+      saveNotice(fileUrl);
+    };
+
+    reader.readAsDataURL(file);
+  } else {
+    saveNotice("");
+  }
+}
+
+async function saveNotice(fileUrl){
+  await fetch(NOTICE_API,{
+    method:"POST",
+    body:JSON.stringify({
+      title:noticeTitle.value,
+      content:noticeContent.value,
+      writer:"구조대",
+      file:fileUrl
+    })
+  });
+
+  noticeTitle.value="";
+  noticeContent.value="";
+  noticeFile.value="";
+
+  loadNotice();
+}
+
+/* RESCUE */
 async function loadRescue(){
 
   const res = await fetch(RESCUE_API+"?action=list");
@@ -457,33 +351,17 @@ async function loadRescue(){
   markers.forEach(m=>m.setMap(null));
   markers=[];
 
-  if(firstLoad){
-    data.forEach(d=>knownIds.add(d.id));
-    firstLoad=false;
-  }else{
-    data.forEach(d=>{
-      if(!knownIds.has(d.id)){
-        knownIds.add(d.id);
-        alert("🚨 신규 구조 요청");
-        document.getElementById("alertSound").play();
-      }
-    });
-  }
-
   data.sort((a,b)=>new Date(b.time)-new Date(a.time));
 
   data.forEach(item=>{
 
     const div=document.createElement("div");
-    div.className="card"+(item.status==="사고처리완료"?" done":"");
+    div.className="card";
 
     div.innerHTML=`
-      <div class="time">🕒 ${new Date(item.time).toLocaleString()}</div>
-      ⏱ ${getElapsed(item.time,item.finishTime)}<br>
-      🏠 ${item.address||""}<br>
-      📞 ${item.phone||""}<br>
+      🕒 ${new Date(item.time).toLocaleString()}<br>
+      📍 ${item.address||""}<br>
       📝 ${item.symptom||""}<br>
-      📍 ${item.lat}, ${item.lng}
     `;
 
     listArea.appendChild(div);
@@ -495,67 +373,28 @@ async function loadRescue(){
     }
   });
 }
-  
-/* ================= NOTICE WRITE ================= */
-async function writeNotice(){
-    const file = noticeFile.files[0];
 
-    let fileUrl="";
-
-    if(file){
-        const reader=new FileReader();
-
-        reader.onload=async function(){
-            const base64=reader.result.split(",")[1];
-
-            const upload=await fetch(NOTICE_API,{
-                method:"POST",
-                body:JSON.stringify({
-                    mode:"upload",
-                    file:base64,
-                    name:file.name,
-                    type:file.type
-                })
-            });
-
-            fileUrl=await upload.text();
-            saveNotice(fileUrl);
-        };
-
-        reader.readAsDataURL(file);
-    }else{
-        saveNotice("");
-    }
+/* TODAY */
+function loadTodaySchedule(){
+  document.getElementById("todaySchedule").innerText =
+  "📅 " + new Date().toLocaleDateString();
 }
 
-async function saveNotice(fileUrl){
-    await fetch(NOTICE_API,{
-        method:"POST",
-        body:JSON.stringify({
-            title:noticeTitle.value,
-            content:noticeContent.value,
-            writer:"구조대",
-            file:fileUrl
-        })
-    });
-
-    loadNotice();
-}
-
-/* ================= INIT ================= */
+/* INIT */
 window.addEventListener("load",()=>{
-    if(sessionStorage.getItem("login")==="ok"){
-        loginPage.style.display="none";
-        mainPage.style.display="block";
-        initMap();
-        loadNotice();
-        loadRescue();
-    }
+  loadTodaySchedule();
+
+  if(sessionStorage.getItem("login")==="ok"){
+    loginPage.style.display="none";
+    mainPage.style.display="block";
+    initMap();
+    loadNotice();
+    loadRescue();
+  }
 });
 
 setInterval(loadRescue,5000);
- 
-  
+
 </script>
 
 </body>
