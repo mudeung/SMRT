@@ -151,6 +151,43 @@ footer{
 
 <body>
 
+<body>
+
+<div id="loginPage" style="
+height:100vh;
+display:flex;
+justify-content:center;
+align-items:center;
+background:#f4f6f8;
+">
+
+    <div class="card" style="width:350px;">
+        <h2 style="text-align:center;margin-bottom:20px;">
+            구조대 전용 로그인
+        </h2>
+
+        <input type="text" id="userid"
+            placeholder="아이디"
+            style="width:100%;padding:10px;margin-bottom:10px;">
+
+        <input type="password" id="password"
+            placeholder="비밀번호"
+            style="width:100%;padding:10px;margin-bottom:10px;">
+
+        <button onclick="login()" style="width:100%;">
+            로그인
+        </button>
+
+        <p id="loginMsg"
+           style="color:red;text-align:center;margin-top:10px;">
+        </p>
+    </div>
+
+</div>
+
+<div id="mainPage" style="display:none;">
+
+    
 <header>
     <div>
         <h1>무등산국립공원 특수산악구조대</h1>
@@ -253,6 +290,41 @@ footer{
     <p>© 2026 무등산국립공원 특수산악구조대</p>
 </footer>
 
+<script>
+
+function login(){
+
+    const id = document.getElementById("userid").value;
+    const pw = document.getElementById("password").value;
+
+    if(id === "rescue" && pw === "knps"){
+
+        sessionStorage.setItem("login","ok");
+
+        document.getElementById("loginPage").style.display="none";
+        document.getElementById("mainPage").style.display="block";
+
+    }else{
+
+        document.getElementById("loginMsg").innerText =
+        "아이디 또는 비밀번호가 올바르지 않습니다.";
+
+    }
+}
+
+window.onload = function(){
+
+    if(sessionStorage.getItem("login") === "ok"){
+
+        document.getElementById("loginPage").style.display="none";
+        document.getElementById("mainPage").style.display="block";
+
+    }
+
+}
+
+</script>
+    
 </body>
 </html>
 
