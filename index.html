@@ -285,10 +285,12 @@ async function loadNotice(){
   const res = await fetch(NOTICE_API);
   const data = await res.json();
 
-  let html="";
+  let html = "";
+  let previewHtml = "";
 
   for(let i=data.length-1;i>=1;i--){
-    html += `
+
+    const itemHtml = `
       <div class="card">
         <h3>${data[i][1]}</h3>
         <p style="white-space:pre-line">${data[i][2]}</p>
@@ -297,31 +299,41 @@ async function loadNotice(){
 
         <br><br>
 
-        <!-- ✅ 삭제 버튼 추가 -->
-        <button onclick="deleteNotice(${i})" style="background:#c0392b;">
+        <!-- ✅ 삭제 버튼 -->
+        <button onclick="deleteNotice('${data[i][0]}')" style="background:#c0392b;">
           삭제
         </button>
-
       </div>
     `;
+
+    html += itemHtml;
+
+    // ✅ 최신 2~3개 미리보기
+    if(i > data.length - 4){
+      previewHtml += itemHtml;
+    }
   }
 
   noticeList.innerHTML = html;
+  noticePreview.innerHTML = previewHtml;
 }
+    
 /* NOTICE 알림*/
-async function deleteNotice(index){
+async function deleteNotice(id){
   if(!confirm("삭제하시겠습니까?")) return;
 
   await fetch(NOTICE_API, {
-    method: "POST",
+    method:"POST",
     body: JSON.stringify({
-      mode: "delete",
-      index: index
+      mode:"delete",
+      id:id
     })
   });
 
   loadNotice();
-}    
+}
+
+    
 /* NOTICE SAVE */
 async function writeNotice(){
   const file = noticeFile.files[0];
