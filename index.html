@@ -290,36 +290,44 @@ background:#f4f6f8;
 
 <script>
 
-function login(){
+function login() {
 
-    const id = document.getElementById("userid").value;
-    const pw = document.getElementById("password").value;
+    const id = document.getElementById("userid").value.trim();
+    const pw = document.getElementById("password").value.trim();
+    const msg = document.getElementById("loginMsg");
 
-    if(id === "rescue" && pw === "knps"){
+    if(id === "rescue" && pw === "knps") {
 
-        sessionStorage.setItem("login","ok");
+        sessionStorage.setItem("login", "ok");
 
-        document.getElementById("loginPage").style.display="none";
-        document.getElementById("mainPage").style.display="block";
+        document.getElementById("loginPage").style.display = "none";
+        document.getElementById("mainPage").style.display = "block";
 
-    }else{
+        msg.textContent = "";
 
-        document.getElementById("loginMsg").innerText =
+    } else {
+
+        msg.textContent =
         "아이디 또는 비밀번호가 올바르지 않습니다.";
 
     }
 }
 
-window.onload = function(){
+window.addEventListener("DOMContentLoaded", () => {
 
-    if(sessionStorage.getItem("login") === "ok"){
-
-        document.getElementById("loginPage").style.display="none";
-        document.getElementById("mainPage").style.display="block";
-
+    if(sessionStorage.getItem("login") === "ok") {
+        document.getElementById("loginPage").style.display = "none";
+        document.getElementById("mainPage").style.display = "block";
     }
 
-}
+});
+
+function logout() {
+
+    sessionStorage.removeItem("login");
+    location.reload();
+
+}    
 
 </script>
     
