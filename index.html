@@ -359,10 +359,10 @@ async function loadRescue(){
     div.className="card";
 
     div.innerHTML=`
-      🕒 ${new Date(item.time).toLocaleString()}<br>
-      📍 ${item.address||""}<br>
-      📝 ${item.symptom||""}<br>
-    `;
+  🕒 ${new Date(item.time).toLocaleString()}<br>
+  📍 ${item.address ?? item.location ?? "위치 없음"}<br>
+  📝 ${item.symptom ?? item.memo ?? "내용 없음"}<br>
+`;
 
     listArea.appendChild(div);
 
