@@ -367,6 +367,45 @@ loadNotice();
 
 });
 
+/* 게시물 표시 */
+async function loadNoticePreview(){
+
+  const res = await fetch(API);
+  const data = await res.json();
+
+  let html = "";
+
+  for(let i=data.length-1;i>=1;i--){
+
+    html += `
+    <div class="card">
+
+      <h3>📢 ${data[i][1]}</h3>
+
+      <p>${data[i][2].substring(0,80)}...</p>
+
+      <small>${data[i][3]}</small>
+
+      <br><br>
+
+      <button onclick="location.href='#notice'">
+        전체보기
+      </button>
+
+    </div>
+    <br>
+    `;
+
+    break;
+  }
+
+  document.getElementById("noticePreview")
+  .innerHTML = html;
+}
+
+window.addEventListener("load", loadNoticePreview);
+
+    
 </script>
 
 </body>
