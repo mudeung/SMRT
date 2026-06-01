@@ -97,3 +97,9 @@ footer{
     border-radius:10px;
     background:white;
 }
+
+@media(max-width:768px){
+    .calendar-frame{
+        height:700px;
+    }
+}
