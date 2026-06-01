@@ -13,21 +13,19 @@
     font-family:'Malgun Gothic', sans-serif;
 }
 
-html{scroll-behavior:smooth;}
-
 body{
     background:#f4f6f8;
     color:#333;
 }
 
+/* HEADER */
 header{
     background:
     linear-gradient(rgba(0,0,0,0.5),rgba(0,0,0,0.5)),
     url('https://images.unsplash.com/photo-1464822759023-fed622ff2c3b?auto=format&fit=crop&w=1600&q=80');
     background-size:cover;
     background-position:center;
-    min-height:500px;
-    height:70vh;
+    height:80vh;
     display:flex;
     justify-content:center;
     align-items:center;
@@ -35,9 +33,7 @@ header{
     color:white;
 }
 
-header h1{font-size:3rem;margin-bottom:15px;}
-header p{font-size:1.2rem;}
-
+/* NAV */
 nav{
     background:#0b4f2f;
     padding:15px;
@@ -54,9 +50,10 @@ nav a{
     font-weight:bold;
 }
 
-nav a:hover{text-decoration:underline;}
-
-section{padding:60px 10%;}
+/* SECTION */
+section{
+    padding:60px 10%;
+}
 
 .section-title{
     text-align:center;
@@ -64,13 +61,16 @@ section{padding:60px 10%;}
     color:#0b4f2f;
 }
 
+/* CARD */
 .card{
     background:white;
     padding:25px;
     border-radius:10px;
     box-shadow:0 2px 10px rgba(0,0,0,0.1);
+    margin-bottom:15px;
 }
 
+/* BUTTON */
 button{
     margin-top:10px;
     padding:10px 15px;
@@ -81,7 +81,27 @@ button{
     cursor:pointer;
 }
 
-button:hover{background:#083a22;}
+/* CALENDAR */
+.calendar-wrap{
+    width:100%;
+    height:80vh;
+}
+
+.calendar-wrap iframe{
+    width:100%;
+    height:100%;
+    border:0;
+    border-radius:10px;
+}
+
+/* TODAY BOX */
+.today-box{
+    background:#fff;
+    padding:15px;
+    border-radius:10px;
+    margin-bottom:15px;
+    box-shadow:0 2px 10px rgba(0,0,0,0.1);
+}
 
 footer{
     background:#0b4f2f;
@@ -89,7 +109,6 @@ footer{
     text-align:center;
     padding:20px;
 }
-
 </style>
 </head>
 
@@ -120,23 +139,41 @@ footer{
 </header>
 
 <nav>
-<a href="#about">주요 임무</a>
+<a href="#about">주요임무</a>
 <a href="#mission">상황판</a>
-<a href="#notice">공지사항</a>
+<a href="#notice">게시판</a>
 <a href="#contact">연락처</a>
 </nav>
 
+<!-- 오늘 일정 -->
+<div class="today-box">
+  <h3>📌 오늘 일정</h3>
+  <div id="todaySchedule">로딩중...</div>
+</div>
+
+<!-- 캘린더 -->
+<section id="calendar">
+<h2 class="section-title">공유일정</h2> 
+<div class="calendar-wrap">
+  <iframe
+    src="https://calendar.google.com/calendar/embed?src=35f4e5ad17b2ce6c5ae379ff9dda889a46f1ee7928c82efdc9668a596da889fb%40group.calendar.google.com&ctz=Asia/Seoul&hl=ko">
+  </iframe>
+</div>
+
+</section>  
+  
+<!-- 주요임무 --> 
 <section id="about">
-<h2 class="section-title">주요 임무</h2>
+<h2 class="section-title">주요임무</h2>
 <div class="card">
 무등산국립공원 특수산악구조대는 산악사고, 조난자 구조, 응급처치, 수색 활동을 수행하며 24시간 대응체계를 유지하고 있습니다.
 </div>
-</section>
+</section>  
 
+ <!-- 구조 현황판 연동 --> 
 <section id="mission">
-    <h2 class="section-title">구조대 상황판</h2>
+    <h2 class="section-title">상황관제</h2>
 
-<!-- 구조 현황판 연동 -->
 <div class="cards">
     <div class="card">
         <h3>🆘 산악사고 상황관제 현황판</h3>
@@ -168,12 +205,11 @@ footer{
         </div>
     </div>
 </div>
-</section>
+</section>  
 
-    
 <!-- ✅ 공지사항 -->
 <section id="notice">
-<h2 class="section-title">공지사항</h2>
+<h2 class="section-title">게시판</h2>
 <div class="card">
 <input id="noticeTitle" placeholder="제목"
 style="width:100%;padding:10px;margin-bottom:10px;">
@@ -181,31 +217,20 @@ style="width:100%;padding:10px;margin-bottom:10px;">
 placeholder="내용"
 style="width:100%;height:150px;padding:10px;margin-bottom:10px;"></textarea>
 <input type="file" id="noticeFile" accept=".jpg,.jpeg,.png,.pdf">
-<button onclick="writeNotice()">공지 등록</button>
+<button onclick="writeNotice()">게시판 등록</button>
 </div>
     
 <br>   
    
 <div id="noticeList"></div>
-</section>
-
+</section>  
+  
+  
+<!-- 미리보기 -->
 <div id="noticePreview"></div>
-    
-<!-- 구글 카렌더 강조-->
-<div class="today-box">
-  <h3>📌 오늘 일정</h3>
-  <div id="todaySchedule">로딩중...</div>
-</div>    
-    
-<!-- 구글 카렌더 -->
-<div class="calendar-wrap">
-  <iframe
-    src="https://calendar.google.com/calendar/embed?src=35f4e5ad17b2ce6c5ae379ff9dda889a46f1ee7928c82efdc9668a596da889fb%40group.calendar.google.com&ctz=Asia/Seoul&hl=ko"
-    loading="lazy">
-  </iframe>
-</div>
-</section>
-    
+
+
+  
 <!-- 유관기관 연락처 -->
 <section id="contact">
 <h2 class="section-title">유관기관 연락처</h2>
@@ -220,9 +245,8 @@ style="width:100%;height:150px;padding:10px;margin-bottom:10px;"></textarea>
     <p><strong>119산악구조대 사무실 :</strong> 062-606-4791</p>
     <p><strong>119산악구조대 업무폰 :</strong> 010-8002-0860</p>
 </div>
-</section>
-
-<!--  하단글 -->
+</section>  
+  
 <footer>
 © 2026 무등산국립공원 특수산악구조대
 </footer>
@@ -231,10 +255,7 @@ style="width:100%;height:150px;padding:10px;margin-bottom:10px;"></textarea>
 
 <script>
 
-const API =
-"https://script.google.com/macros/s/AKfycbx0RIpxdlgEZVA3CBjVLT1SWhH7cYOLePudYd1n_o_x2D3HaaD-FXLQk-_5D-aooQG0/exec";
-
-let loginOk = false;
+const API = "https://script.google.com/macros/s/AKfycbx0RIpxdlgEZVA3CBjVLT1SWhH7cYOLePudYd1n_o_x2D3HaaD-FXLQk-_5D-aooQG0/exec";
 
 /* 로그인 */
 function login(){
@@ -244,10 +265,10 @@ const pw = password.value;
 
 if(id==="rescue" && pw==="knps"){
     sessionStorage.setItem("login","ok");
-    loginOk = true;
     loginPage.style.display="none";
     mainPage.style.display="block";
     loadNotice();
+    loadPreview();
 }else{
     loginMsg.textContent="로그인 실패";
 }
@@ -268,24 +289,21 @@ html += `
 <h3>${data[i][1]}</h3>
 <p style="white-space:pre-line">${data[i][2]}</p>
 
-<br>
 <small>${data[i][3]}</small><br>
 
 ${data[i][4] ? `<a href="${data[i][4]}" target="_blank">첨부파일</a>`:""}
 
 ${sessionStorage.getItem("login")==="ok"
 ? `<br><button onclick="deleteNotice('${data[i][0]}')">삭제</button>`:""}
-</div><br>`;
+</div>`;
 }
 
 noticeList.innerHTML = html;
 }
 
-/* 파일 업로드 + 저장 */
+/* 업로드 */
 async function writeNotice(){
 
-const title = noticeTitle.value;
-const content = noticeContent.value;
 const file = noticeFile.files[0];
 
 let fileUrl="";
@@ -316,9 +334,7 @@ saveNotice(fileUrl);
 reader.readAsDataURL(file);
 
 }else{
-
 saveNotice("");
-
 }
 }
 
@@ -340,12 +356,11 @@ noticeContent.value="";
 noticeFile.value="";
 
 loadNotice();
+loadPreview();
 }
 
 /* 삭제 */
 async function deleteNotice(id){
-
-if(!confirm("삭제?")) return;
 
 await fetch(API,{
 method:"POST",
@@ -356,70 +371,50 @@ id:id
 });
 
 loadNotice();
+loadPreview();
 }
 
-/* 자동 실행 */
-window.addEventListener("load",()=>{
+/* 미리보기 */
+async function loadPreview(){
 
+const res = await fetch(API);
+const data = await res.json();
+
+let html="";
+
+for(let i=data.length-1;i>=1;i--){
+html += `
+<div class="card">
+<h3>📢 ${data[i][1]}</h3>
+<p>${data[i][2].substring(0,80)}...</p>
+<button onclick="location.href='#notice'">전체보기</button>
+</div>`;
+break;
+}
+
+document.getElementById("noticePreview").innerHTML = html;
+}
+
+/* 오늘 일정 */
+function loadTodaySchedule(){
+
+const today = new Date().toLocaleDateString();
+
+document.getElementById("todaySchedule").innerHTML =
+"📅 오늘 날짜: " + today;
+}
+
+window.addEventListener("load",()=>{
 if(sessionStorage.getItem("login")==="ok"){
 loginPage.style.display="none";
 mainPage.style.display="block";
 loadNotice();
+loadPreview();
 }
-
+loadTodaySchedule();
 });
 
-/* 게시물 표시 */
-async function loadNoticePreview(){
-
-  const res = await fetch(API);
-  const data = await res.json();
-
-  let html = "";
-
-  for(let i=data.length-1;i>=1;i--){
-
-    html += `
-    <div class="card">
-
-      <h3>📢 ${data[i][1]}</h3>
-
-      <p>${data[i][2].substring(0,80)}...</p>
-
-      <small>${data[i][3]}</small>
-
-      <br><br>
-
-      <button onclick="location.href='#notice'">
-        전체보기
-      </button>
-
-    </div>
-    <br>
-    `;
-
-    break;
-  }
-
-  document.getElementById("noticePreview")
-  .innerHTML = html;
-}
-
-window.addEventListener("load", loadNoticePreview);
-
- /* 오늘스캐쥴 */   
- function loadTodaySchedule(){
-
-  const today = new Date().toLocaleDateString();
-
-  document.getElementById("todaySchedule").innerHTML =
-  "📅 오늘 날짜: " + today + "<br>구글 캘린더 확인 필요";
-}
-
-window.addEventListener("load", loadTodaySchedule);   
-    
 </script>
 
 </body>
 </html>
-
