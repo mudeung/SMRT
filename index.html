@@ -294,13 +294,34 @@ async function loadNotice(){
         <p style="white-space:pre-line">${data[i][2]}</p>
         <small>${data[i][3]||""}</small><br>
         ${data[i][4] ? `<a href="${data[i][4]}" target="_blank">첨부파일</a>` : ""}
+
+        <br><br>
+
+        <!-- ✅ 삭제 버튼 추가 -->
+        <button onclick="deleteNotice(${i})" style="background:#c0392b;">
+          삭제
+        </button>
+
       </div>
     `;
   }
 
   noticeList.innerHTML = html;
 }
+/* NOTICE 알림*/
+async function deleteNotice(index){
+  if(!confirm("삭제하시겠습니까?")) return;
 
+  await fetch(NOTICE_API, {
+    method: "POST",
+    body: JSON.stringify({
+      mode: "delete",
+      index: index
+    })
+  });
+
+  loadNotice();
+}    
 /* NOTICE SAVE */
 async function writeNotice(){
   const file = noticeFile.files[0];
