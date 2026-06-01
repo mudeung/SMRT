@@ -144,7 +144,28 @@ footer{
 <a href="#notice">업무공지 게시판</a>
 <a href="#contact">유관기관 연락처</a>
 </nav>
+  
+ <!-- 카카오맵 SDK -->
+<script src="https://dapi.kakao.com/v2/maps/sdk.js?appkey=ff9e145029506d6e4c72d1f2b01ea424&libraries=services"></script>  
 
+  <!-- 구조현황 -->
+<section id="rescue">
+  <h2>🚨 실시간 구조현황</h2>
+
+  <div id="map"></div>
+  <div id="listArea">로딩중...</div>
+</section> 
+  </div>
+
+<audio id="alertSound">
+  <source src="https://actions.google.com/sounds/v1/alarms/alarm_clock.ogg">
+</audio>
+  
+<div class="container">
+  <div id="map"></div>
+</div>
+  
+  
 <!-- 게시글 미리보기 -->
 <div id="noticePreview"></div>    
     
@@ -243,8 +264,10 @@ style="width:100%;height:150px;padding:10px;margin-bottom:10px;"></textarea>
 </div>
 
 <script>
+/* ================= API ================= */
+const NOTICE_API = "https://script.google.com/macros/s/AKfycbx0RIpxdlgEZVA3CBjVLT1SWhH7cYOLePudYd1n_o_x2D3HaaD-FXLQk-_5D-aooQG0/exec";
+const RESCUE_API = "https://script.google.com/macros/s/AKfycbwUbacHm34YkWh--zL_e590P6h4S5wQo3iF8tCVZu71ZaTunTwdZ1TMLVqkyuHu-izW/exec";
 
-const API = "https://script.google.com/macros/s/AKfycbx0RIpxdlgEZVA3CBjVLT1SWhH7cYOLePudYd1n_o_x2D3HaaD-FXLQk-_5D-aooQG0/exec";
 
 /* 로그인 */
 function login(){
@@ -402,7 +425,137 @@ loadPreview();
 }
 loadTodaySchedule();
 });
+ 
+/* ================= MAP ================= */
+let map, markers=[];
 
+function initMap(){
+  map = new kakao.maps.Map(document.getElementById("map"),{
+    center:new kakao.maps.LatLng(35.1345,126.9902),
+    level:6
+  });
+}  
+  
+/* ================= RESCUE ================= */
+const listArea = document.getElementById("listArea");
+let knownIds=new Set();
+let firstLoad=true;
+
+function getElapsed(t,e=null){
+  const s=new Date(t);
+  const end=e?new Date(e):new Date();
+  const d=Math.floor((end-s)/1000);
+  return `${Math.floor(d/60)}분 ${d%60}초`;
+}
+
+async function loadRescue(){
+
+  const res = await fetch(RESCUE_API+"?action=list");
+  const data = await res.json();
+
+  listArea.innerHTML="";
+  markers.forEach(m=>m.setMap(null));
+  markers=[];
+
+  if(firstLoad){
+    data.forEach(d=>knownIds.add(d.id));
+    firstLoad=false;
+  }else{
+    data.forEach(d=>{
+      if(!knownIds.has(d.id)){
+        knownIds.add(d.id);
+        alert("🚨 신규 구조 요청");
+        document.getElementById("alertSound").play();
+      }
+    });
+  }
+
+  data.sort((a,b)=>new Date(b.time)-new Date(a.time));
+
+  data.forEach(item=>{
+
+    const div=document.createElement("div");
+    div.className="card"+(item.status==="사고처리완료"?" done":"");
+
+    div.innerHTML=`
+      <div class="time">🕒 ${new Date(item.time).toLocaleString()}</div>
+      ⏱ ${getElapsed(item.time,item.finishTime)}<br>
+      🏠 ${item.address||""}<br>
+      📞 ${item.phone||""}<br>
+      📝 ${item.symptom||""}<br>
+      📍 ${item.lat}, ${item.lng}
+    `;
+
+    listArea.appendChild(div);
+
+    if(item.lat && item.lng){
+      const pos=new kakao.maps.LatLng(item.lat,item.lng);
+      const marker=new kakao.maps.Marker({map,position:pos});
+      markers.push(marker);
+    }
+  });
+}
+  
+/* ================= NOTICE WRITE ================= */
+async function writeNotice(){
+    const file = noticeFile.files[0];
+
+    let fileUrl="";
+
+    if(file){
+        const reader=new FileReader();
+
+        reader.onload=async function(){
+            const base64=reader.result.split(",")[1];
+
+            const upload=await fetch(NOTICE_API,{
+                method:"POST",
+                body:JSON.stringify({
+                    mode:"upload",
+                    file:base64,
+                    name:file.name,
+                    type:file.type
+                })
+            });
+
+            fileUrl=await upload.text();
+            saveNotice(fileUrl);
+        };
+
+        reader.readAsDataURL(file);
+    }else{
+        saveNotice("");
+    }
+}
+
+async function saveNotice(fileUrl){
+    await fetch(NOTICE_API,{
+        method:"POST",
+        body:JSON.stringify({
+            title:noticeTitle.value,
+            content:noticeContent.value,
+            writer:"구조대",
+            file:fileUrl
+        })
+    });
+
+    loadNotice();
+}
+
+/* ================= INIT ================= */
+window.addEventListener("load",()=>{
+    if(sessionStorage.getItem("login")==="ok"){
+        loginPage.style.display="none";
+        mainPage.style.display="block";
+        initMap();
+        loadNotice();
+        loadRescue();
+    }
+});
+
+setInterval(loadRescue,5000);
+ 
+  
 </script>
 
 </body>
