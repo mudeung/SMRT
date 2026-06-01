@@ -1,5 +1,4 @@
 <!DOCTYPE html>
-
 <html lang="ko">
 <head>
 <meta charset="UTF-8">
@@ -14,9 +13,7 @@
     font-family:'Malgun Gothic', sans-serif;
 }
 
-html{
-    scroll-behavior:smooth;
-}
+html{scroll-behavior:smooth;}
 
 body{
     background:#f4f6f8;
@@ -38,14 +35,8 @@ header{
     color:white;
 }
 
-header h1{
-    font-size:3rem;
-    margin-bottom:15px;
-}
-
-header p{
-    font-size:1.2rem;
-}
+header h1{font-size:3rem;margin-bottom:15px;}
+header p{font-size:1.2rem;}
 
 nav{
     background:#0b4f2f;
@@ -63,13 +54,9 @@ nav a{
     font-weight:bold;
 }
 
-nav a:hover{
-    text-decoration:underline;
-}
+nav a:hover{text-decoration:underline;}
 
-section{
-    padding:60px 10%;
-}
+section{padding:60px 10%;}
 
 .section-title{
     text-align:center;
@@ -77,29 +64,11 @@ section{
     color:#0b4f2f;
 }
 
-.cards{
-    display:grid;
-    grid-template-columns:repeat(auto-fit,minmax(250px,1fr));
-    gap:20px;
-}
-
 .card{
     background:white;
     padding:25px;
     border-radius:10px;
     box-shadow:0 2px 10px rgba(0,0,0,0.1);
-}
-
-.card h3{
-    margin-bottom:15px;
-    color:#0b4f2f;
-}
-
-.status{
-    background:#f9f9f9;
-    padding:15px;
-    border-radius:10px;
-    margin-top:10px;
 }
 
 button{
@@ -110,18 +79,9 @@ button{
     color:white;
     border-radius:6px;
     cursor:pointer;
-    font-size:15px;
 }
 
-button:hover{
-    background:#083a22;
-}
-
-iframe{
-    border:0;
-    border-radius:10px;
-    background:white;
-}
+button:hover{background:#083a22;}
 
 footer{
     background:#0b4f2f;
@@ -130,88 +90,47 @@ footer{
     padding:20px;
 }
 
-@media(max-width:768px){
-
-    header h1{
-        font-size:2rem;
-    }
-
-    nav a{
-        display:block;
-        margin:10px 0;
-    }
-
-    section{
-        padding:40px 5%;
-    }
-}
 </style>
-
 </head>
 
 <body>
 
-<div id="loginPage" style="
-height:100vh;
-display:flex;
-justify-content:center;
-align-items:center;
-background:#f4f6f8;
-">
-
+<!-- LOGIN -->
+<div id="loginPage" style="height:100vh;display:flex;justify-content:center;align-items:center;">
     <div class="card" style="width:350px;">
-        <h2 style="text-align:center;margin-bottom:20px;">
-            구조대 전용 로그인
-        </h2>
+        <h2 style="text-align:center;">구조대 로그인</h2>
 
-        <input type="text" id="userid"
-            placeholder="아이디"
-            style="width:100%;padding:10px;margin-bottom:10px;">
+        <input id="userid" placeholder="아이디" style="width:100%;padding:10px;margin-top:10px;">
+        <input id="password" type="password" placeholder="비밀번호" style="width:100%;padding:10px;margin-top:10px;">
 
-        <input type="password" id="password"
-            placeholder="비밀번호"
-            style="width:100%;padding:10px;margin-bottom:10px;">
+        <button onclick="login()" style="width:100%;">로그인</button>
 
-        <button onclick="login()" style="width:100%;">
-            로그인
-        </button>
-
-        <p id="loginMsg"
-           style="color:red;text-align:center;margin-top:10px;">
-        </p>
+        <p id="loginMsg" style="color:red;text-align:center;margin-top:10px;"></p>
     </div>
-
 </div>
 
+<!-- MAIN -->
 <div id="mainPage" style="display:none;">
 
-    
 <header>
-    <div>
-        <h1>무등산국립공원 특수산악구조대</h1>
-        <p>국민의 생명과 안전을 지키는 산악전문 구조팀</p>
-    </div>
+<div>
+<h1>무등산국립공원 특수산악구조대</h1>
+<p>국민의 생명과 안전을 지키는 산악전문 구조팀</p>
+</div>
 </header>
 
 <nav>
-    <a href="#about">주요 임무</a>
-    <a href="#mission">구조대 상황판</a>
-    <a href="#notice">공지사항</a>
-    <a href="#schedule">일정 공유</a>
-    <a href="#contact">유관기관 연락처</a>
+<a href="#about">주요 임무</a>
+<a href="#mission">상황판</a>
+<a href="#notice">공지사항</a>
+<a href="#contact">연락처</a>
 </nav>
 
 <section id="about">
-    <h2 class="section-title">주요 임무</h2>
-
-
+<h2 class="section-title">주요 임무</h2>
 <div class="card">
-    무등산국립공원 특수산악구조대는 산악사고,
-    조난자 구조, 응급처치, 수색 활동을 수행하며
-    24시간 대응체계를 유지하고 있습니다.
+산악사고 구조 / 수색 / 응급처치 / 24시간 대응
 </div>
-
-
 </section>
 
 <section id="mission">
@@ -219,13 +138,10 @@ background:#f4f6f8;
 
 
 <div class="cards">
-
     <div class="card">
         <h3>🆘 산악사고 상황관제 현황판</h3>
-
         <div class="status">
             <p>실시간 산악사고 신고 접수</p>
-
             <button onclick="window.open(
             'https://mudeung.github.io/rescue/callems.html',
             '_blank',
@@ -235,7 +151,7 @@ background:#f4f6f8;
             </button>
         </div>
     </div>
-
+<br>
     <div class="card">
         <h3>📍 산악사고 위치 공유시스템</h3>
 
@@ -251,137 +167,33 @@ background:#f4f6f8;
             </button>
         </div>
     </div>
-
 </div>
-
-
 </section>
 
 
-<section id="board">
+<!-- ✅ 공지사항 -->
+<section id="notice">
 
-<h2 class="section-title">게시판</h2>
+<h2 class="section-title">공지사항</h2>
 
 <div class="card">
 
-<input id="title"
-placeholder="제목"
+<input id="noticeTitle" placeholder="제목"
 style="width:100%;padding:10px;margin-bottom:10px;">
 
-<textarea id="content"
+<textarea id="noticeContent"
 placeholder="내용"
-style="width:100%;height:150px;padding:10px;">
-</textarea>
+style="width:100%;height:150px;padding:10px;margin-bottom:10px;"></textarea>
 
-<button onclick="writePost()">
-글쓰기
-</button>
+<input type="file" id="noticeFile" accept=".jpg,.jpeg,.png,.pdf">
 
-</div>
-
-<br>
-
-<div id="boardList"></div>
-
-</section>
-
-
-<section id="notice">
-
-<h2 class="section-title">
-공지사항
-</h2>
-
-<div class="card">
-
-<input
-id="noticeTitle"
-placeholder="제목"
-style="
-width:100%;
-padding:10px;
-margin-bottom:10px;">
-
-<textarea
-id="noticeContent"
-placeholder="내용"
-style="
-width:100%;
-height:150px;
-padding:10px;
-margin-bottom:10px;">
-</textarea>
-
-<button onclick="writeNotice()">
-공지 등록
-</button>
+<button onclick="writeNotice()">공지 등록</button>
 
 </div>
 
 <br>
 
 <div id="noticeList"></div>
-
-</section>
- 
-
-<section id="notice">
-
-<h2 class="section-title">
-공지사항
-</h2>
-
-<div class="card">
-
-<input
-id="noticeTitle"
-placeholder="공지 제목"
-style="
-width:100%;
-padding:10px;
-margin-bottom:10px;">
-
-<textarea
-id="noticeContent"
-placeholder="공지 내용"
-style="
-width:100%;
-height:150px;
-padding:10px;
-margin-bottom:10px;">
-</textarea>
-
-<input
-type="file"
-id="noticeFile"
-accept=".jpg,.jpeg,.png,.pdf"
-style="margin-bottom:10px;">
-
-<button onclick="writeNotice()">
-공지 등록
-</button>
-
-</div>
-
-<br>
-
-<div id="noticeList"></div>
-
-</section>
-
-    
-    
-<section id="schedule">
-    <h2 class="section-title">일정 공유</h2>
-
-
-<iframe
-    src="https://calendar.google.com/calendar/embed?src=35f4e5ad17b2ce6c5ae379ff9dda889a46f1ee7928c82efdc9668a596da889fb%40group.calendar.google.com&ctz=Asia/Seoul&hl=ko"
-    width="100%"
-    height="900"
-    loading="lazy">
-</iframe>
-
 
 </section>
 
@@ -389,125 +201,168 @@ style="margin-bottom:10px;">
 
 
 <h2 class="section-title">유관기관 연락처</h2>
-
 <div class="card">
     <p><strong>재난상황실 :</strong> 062-230-2043</p>
     <p><strong>상황실 FAX :</strong> 062-230-2099</p>
     <p><strong>사무소 업무폰 :</strong> 010-3190-1187</p>
     <p><strong>원효분소 업무폰 :</strong> 010-8860-1187</p>
-
-
 </div>
   <br>
 <div class="card">
     <p><strong>119산악구조대 사무실 :</strong> 062-606-4791</p>
     <p><strong>119산악구조대 업무폰 :</strong> 010-8002-0860</p>
 </div>
-
-
 </section>
 
+
 <footer>
-    <p>© 2026 무등산국립공원 특수산악구조대</p>
+© 2026 무등산국립공원 특수산악구조대
 </footer>
 
+</div>
+
 <script>
-
-function login() {
-
-    const id = document.getElementById("userid").value.trim();
-    const pw = document.getElementById("password").value.trim();
-    const msg = document.getElementById("loginMsg");
-
-    if(id === "rescue" && pw === "knps") {
-
-        sessionStorage.setItem("login", "ok");
-
-        document.getElementById("loginPage").style.display = "none";
-        document.getElementById("mainPage").style.display = "block";
-
-        msg.textContent = "";
-
-    } else {
-
-        msg.textContent =
-        "아이디 또는 비밀번호가 올바르지 않습니다.";
-
-    }
-}
-
-window.addEventListener("DOMContentLoaded", () => {
-
-    if(sessionStorage.getItem("login") === "ok") {
-        document.getElementById("loginPage").style.display = "none";
-        document.getElementById("mainPage").style.display = "block";
-    }
-
-});
-
-function logout() {
-
-    sessionStorage.removeItem("login");
-    location.reload();
-
-}    
 
 const API =
 "https://script.google.com/macros/s/AKfycbx0RIpxdlgEZVA3CBjVLT1SWhH7cYOLePudYd1n_o_x2D3HaaD-FXLQk-_5D-aooQG0/exec";
 
-async function loadBoard(){
+let loginOk = false;
 
-    const res = await fetch(API);
-    const data = await res.json();
+/* 로그인 */
+function login(){
 
-    let html = "";
+const id = userid.value;
+const pw = password.value;
 
-    for(let i=data.length-1; i>=1; i--){
-
-        html += `
-        <div class="card">
-            <h3>${data[i][1]}</h3>
-            <p>${data[i][2]}</p>
-            <small>
-            작성자 : ${data[i][3]}
-            </small>
-        </div>
-        <br>
-        `;
-    }
-
-    document.getElementById("boardList")
-    .innerHTML = html;
+if(id==="rescue" && pw==="knps"){
+    sessionStorage.setItem("login","ok");
+    loginOk = true;
+    loginPage.style.display="none";
+    mainPage.style.display="block";
+    loadNotice();
+}else{
+    loginMsg.textContent="로그인 실패";
+}
 }
 
-async function writePost(){
+/* 공지 로드 */
+async function loadNotice(){
 
-    const title =
-    document.getElementById("title").value;
+const res = await fetch(API);
+const data = await res.json();
 
-    const content =
-    document.getElementById("content").value;
+let html="";
 
-    const writer = "구조대";
+for(let i=data.length-1;i>=1;i--){
 
-    await fetch(API,{
-        method:"POST",
-        body:JSON.stringify({
-            title,
-            content,
-            writer
-        })
-    });
+html += `
+<div class="card">
+<h3>${data[i][1]}</h3>
+<p style="white-space:pre-line">${data[i][2]}</p>
 
-    alert("등록 완료");
+<br>
+<small>${data[i][3]}</small><br>
 
-    loadBoard();
+${data[i][4] ? `<a href="${data[i][4]}" target="_blank">첨부파일</a>`:""}
+
+${sessionStorage.getItem("login")==="ok"
+? `<br><button onclick="deleteNotice('${data[i][0]}')">삭제</button>`:""}
+</div><br>`;
 }
 
-window.addEventListener("load", loadBoard);
-    
+noticeList.innerHTML = html;
+}
+
+/* 파일 업로드 + 저장 */
+async function writeNotice(){
+
+const title = noticeTitle.value;
+const content = noticeContent.value;
+const file = noticeFile.files[0];
+
+let fileUrl="";
+
+if(file){
+
+const reader = new FileReader();
+
+reader.onload = async function(){
+
+const base64 = reader.result.split(",")[1];
+
+const upload = await fetch(API,{
+method:"POST",
+body:JSON.stringify({
+mode:"upload",
+file:base64,
+name:file.name,
+type:file.type
+})
+});
+
+fileUrl = await upload.text();
+
+saveNotice(fileUrl);
+};
+
+reader.readAsDataURL(file);
+
+}else{
+
+saveNotice("");
+
+}
+}
+
+/* 저장 */
+async function saveNotice(fileUrl){
+
+await fetch(API,{
+method:"POST",
+body:JSON.stringify({
+title:noticeTitle.value,
+content:noticeContent.value,
+writer:"구조대",
+file:fileUrl
+})
+});
+
+noticeTitle.value="";
+noticeContent.value="";
+noticeFile.value="";
+
+loadNotice();
+}
+
+/* 삭제 */
+async function deleteNotice(id){
+
+if(!confirm("삭제?")) return;
+
+await fetch(API,{
+method:"POST",
+body:JSON.stringify({
+mode:"delete",
+id:id
+})
+});
+
+loadNotice();
+}
+
+/* 자동 실행 */
+window.addEventListener("load",()=>{
+
+if(sessionStorage.getItem("login")==="ok"){
+loginPage.style.display="none";
+mainPage.style.display="block";
+loadNotice();
+}
+
+});
+
 </script>
-    
+
 </body>
 </html>
 
