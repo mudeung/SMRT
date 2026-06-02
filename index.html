@@ -265,317 +265,227 @@ src="https://calendar.google.com/calendar/embed?src=35f4e5ad17b2ce6c5ae379ff9dda
 const NOTICE_API = "https://script.google.com/macros/s/AKfycbx0RIpxdlgEZVA3CBjVLT1SWhH7cYOLePudYd1n_o_x2D3HaaD-FXLQk-_5D-aooQG0/exec";
 const RESCUE_API = "https://script.google.com/macros/s/AKfycbwUbacHm34YkWh--zL_e590P6h4S5wQo3iF8tCVZu71ZaTunTwdZ1TMLVqkyuHu-izW/exec";
 
-/* LOGIN */
-function login(){
+/* ===== 전역변수 ===== */
+let map, markers = [], allData = [];
 
-  const id = document.getElementById("userid").value;
-  const pw = document.getElementById("password").value;
+/* ===== LOGIN ===== */
+function login() {
+    const id = document.getElementById("userid").value;
+    const pw = document.getElementById("password").value;
 
-  if(id === "rescue" && pw === "knps"){
+    if (id === "rescue" && pw === "knps") {
+        sessionStorage.setItem("login", "ok");
+        document.getElementById("loginPage").style.display = "none";
+        document.getElementById("mainPage").style.display = "block";
 
-    sessionStorage.setItem("login","ok");
+        initMap();
+        loadNotice();
+        loadData();
+        loadTodaySchedule();
+    } else {
+        document.getElementById("loginMsg").textContent = "로그인 실패";
+    }
+}
 
-    document.getElementById("loginPage").style.display="none";
-    document.getElementById("mainPage").style.display="block";
+/* ===== MAP ===== */
+function initMap() {
+    map = new kakao.maps.Map(document.getElementById("map"), {
+        center: new kakao.maps.LatLng(35.1345, 126.9902),
+        level: 6
+    });
+}
 
-    initMap();
+/* ===== NOTICE ===== */
+async function loadNotice() {
+    const res = await fetch(NOTICE_API);
+    const data = await res.json();
+
+    let html = "";
+    let previewHtml = "";
+
+    for (let i = data.length - 1; i >= 0; i--) {
+        const listHtml = `
+            <div class="card">
+                <h3>${data[i][1]}</h3>
+                <p style="white-space:pre-line">${data[i][2]}</p>
+                <small>${data[i][3] || ""}</small><br>
+                ${data[i][4] ? `<a href="${data[i][4]}" target="_blank">첨부파일</a>` : ""}
+                <br><br>
+                <button onclick="deleteNotice('${data[i][0]}')" style="background:#c0392b;">
+                    삭제
+                </button>
+            </div>
+        `;
+
+        const previewHtmlItem = `
+            <div class="card">
+                <h3>${data[i][1]}</h3>
+                <p style="white-space:pre-line">${data[i][2]}</p>
+                <small>${data[i][3] || ""}</small><br>
+                ${data[i][4] ? `<a href="${data[i][4]}" target="_blank">첨부파일</a>` : ""}
+            </div>
+        `;
+
+        html += listHtml;
+
+        if (i > data.length - 4) previewHtml += previewHtmlItem;
+    }
+
+    document.getElementById("noticeList").innerHTML = html;
+    document.getElementById("noticePreview").innerHTML = previewHtml;
+}
+
+async function deleteNotice(id) {
+    if (!confirm("삭제하시겠습니까?")) return;
+    await fetch(NOTICE_API, {
+        method: "POST",
+        body: JSON.stringify({ mode: "delete", id: id })
+    });
     loadNotice();
-    loadData();
+}
+
+async function writeNotice() {
+    const file = document.getElementById("noticeFile").files[0];
+    let fileUrl = "";
+
+    if (file) {
+        const reader = new FileReader();
+        reader.onload = async function () {
+            const base64 = reader.result.split(",")[1];
+            const upload = await fetch(NOTICE_API, {
+                method: "POST",
+                body: JSON.stringify({ mode: "upload", file: base64, name: file.name, type: file.type })
+            });
+            fileUrl = await upload.text();
+            saveNotice(fileUrl);
+        };
+        reader.readAsDataURL(file);
+    } else {
+        saveNotice("");
+    }
+}
+
+async function saveNotice(fileUrl) {
+    await fetch(NOTICE_API, {
+        method: "POST",
+        body: JSON.stringify({
+            title: document.getElementById("noticeTitle").value,
+            content: document.getElementById("noticeContent").value,
+            writer: "구조대",
+            file: fileUrl
+        })
+    });
+
+    document.getElementById("noticeTitle").value = "";
+    document.getElementById("noticeContent").value = "";
+    document.getElementById("noticeFile").value = "";
+
+    loadNotice();
+}
+
+/* ===== RESCUE ===== */
+async function loadData() {
+    try {
+        const res = await fetch(RESCUE_API + "?action=list");
+        let data = await res.json();
+        if (!Array.isArray(data)) data = [];
+        allData = data;
+        renderData(allData);
+    } catch (e) {
+        document.getElementById("listArea").innerText = "❌ 오류";
+    }
+}
+
+function renderData(data) {
+    document.getElementById("listArea").innerHTML = "";
+    markers.forEach(m => m.setMap(null));
+    markers = [];
+
+    let bounds = new kakao.maps.LatLngBounds();
+
+    data.forEach(item => {
+        const lat = parseFloat(item.lat || item.latitude);
+        const lng = parseFloat(item.lng || item.longitude);
+
+        if (!isNaN(lat) && !isNaN(lng)) {
+            const marker = new kakao.maps.Marker({
+                map: map,
+                position: new kakao.maps.LatLng(lat, lng)
+            });
+            marker.item = item;
+            kakao.maps.event.addListener(marker, 'click', () => showModal(item));
+            markers.push(marker);
+            bounds.extend(marker.getPosition());
+        }
+
+        const div = document.createElement("div");
+        div.className = "card";
+        div.innerText = `${formatTime(parseKST(item.time))} | ${item.type} | ${item.address}`;
+        div.onclick = () => showModal(item);
+        document.getElementById("listArea").appendChild(div);
+    });
+
+    if (markers.length > 0) map.setBounds(bounds);
+}
+
+function parseKST(dateStr) {
+    if (!dateStr) return null;
+    const d = new Date(dateStr);
+    if (isNaN(d)) return null;
+    return d;
+}
+
+function formatTime(date) {
+    return date.toLocaleString('ko-KR', { timeZone: 'Asia/Seoul' });
+}
+
+function showModal(item) {
+    document.getElementById("modalOverlay").style.display = "flex";
+    document.getElementById("modalBody").innerHTML = `
+        🕒 ${formatTime(parseKST(item.time))}<br>
+        🚨 ${item.type}<br>
+        🏠 ${item.address}<br>
+        📞 ${item.phone || ''}<br>
+        📝 ${item.symptom || ''}<br>
+        상태: ${item.status || ''}
+    `;
+}
+
+function closeModal() {
+    document.getElementById("modalOverlay").style.display = "none";
+}
+
+/* ===== TODAY ===== */
+async function loadTodaySchedule() {
+    const res = await fetch(NOTICE_API + "?action=today");
+    const data = await res.json();
+
+    let html = "";
+    if (data.length === 0) html = "오늘 등록된 일정이 없습니다.";
+    else {
+        data.forEach(item => {
+            html += `<div>⏰ ${item.time} - ${item.title}</div>`;
+        });
+    }
+    document.getElementById("todaySchedule").innerHTML = html;
+}
+
+/* ===== INIT ===== */
+window.addEventListener("load", () => {
     loadTodaySchedule();
 
-  } else {
-    document.getElementById("loginMsg").textContent="로그인 실패";
-  }
-}
-
-/* MAP */
-let map, markers=[];
-
-function initMap(){
-  map = new kakao.maps.Map(document.getElementById("map"),{
-    center:new kakao.maps.LatLng(35.1345,126.9902),
-    level:6
-  });
-}
-
-/* NOTICE */
-async function loadNotice(){
-  const res = await fetch(NOTICE_API);
-  const data = await res.json();
-
-  let html = "";
-  let previewHtml = "";
-
-  for(let i=data.length-1;i>=1;i--){
-
-    // ✅ 리스트용 (삭제 버튼 포함)
-    const listHtml = `
-      <div class="card">
-        <h3>${data[i][1]}</h3>
-        <p style="white-space:pre-line">${data[i][2]}</p>
-        <small>${data[i][3]||""}</small><br>
-        ${data[i][4] ? `<a href="${data[i][4]}" target="_blank">첨부파일</a>` : ""}
-
-        <br><br>
-
-        <button onclick="deleteNotice('${data[i][0]}')" style="background:#c0392b;">
-          삭제
-        </button>
-      </div>
-    `;
-
-    // ✅ 미리보기용 (삭제 버튼 없음)
-    const previewHtmlItem = `
-      <div class="card">
-        <h3>${data[i][1]}</h3>
-        <p style="white-space:pre-line">${data[i][2]}</p>
-        <small>${data[i][3]||""}</small><br>
-        ${data[i][4] ? `<a href="${data[i][4]}" target="_blank">첨부파일</a>` : ""}
-      </div>
-    `;
-
-    html += listHtml;
-
-    // 최신 2~3개만 미리보기
-    if(i > data.length - 4){
-      previewHtml += previewHtmlItem;
+    if (sessionStorage.getItem("login") === "ok") {
+        document.getElementById("loginPage").style.display = "none";
+        document.getElementById("mainPage").style.display = "block";
+        initMap();
+        loadNotice();
+        loadData();
     }
-  }
-
-  noticeList.innerHTML = html;
-  noticePreview.innerHTML = previewHtml;
-}
-    
-/* NOTICE 알림*/
-async function deleteNotice(id){
-  if(!confirm("삭제하시겠습니까?")) return;
-
-  await fetch(NOTICE_API, {
-    method:"POST",
-    body: JSON.stringify({
-      mode:"delete",
-      id:id
-    })
-  });
-
-  loadNotice();
-}
-
-    
-/* NOTICE SAVE */
-async function writeNotice(){
-  const file = noticeFile.files[0];
-  let fileUrl="";
-
-  if(file){
-    const reader = new FileReader();
-
-    reader.onload = async function(){
-      const base64 = reader.result.split(",")[1];
-
-      const upload = await fetch(NOTICE_API,{
-        method:"POST",
-        body:JSON.stringify({
-          mode:"upload",
-          file:base64,
-          name:file.name,
-          type:file.type
-        })
-      });
-
-      fileUrl = await upload.text();
-      saveNotice(fileUrl);
-    };
-
-    reader.readAsDataURL(file);
-  } else {
-    saveNotice("");
-  }
-}
-
-async function saveNotice(fileUrl){
-  await fetch(NOTICE_API,{
-    method:"POST",
-    body:JSON.stringify({
-      title:noticeTitle.value,
-      content:noticeContent.value,
-      writer:"구조대",
-      file:fileUrl
-    })
-  });
-
-  noticeTitle.value="";
-  noticeContent.value="";
-  noticeFile.value="";
-
-  loadNotice();
-}
-
-/* RESCUE */
-window.addEventListener("load",()=>{
-  loadTodaySchedule();
-
-  if(sessionStorage.getItem("login")==="ok"){
-    loginPage.style.display="none";
-    mainPage.style.display="block";
-    initMap();
-    loadNotice();
-    loadData();
-  }
 });
 
-/* ✅ 수정된 시간 함수 */
-function parseKST(dateStr){
-  if(!dateStr) return null;
-  const d = new Date(dateStr);
-  if(isNaN(d)) return null;
-  return d; // ❗ +9시간 제거
-}
-
-function formatTime(date){
-  return date.toLocaleString('ko-KR',{timeZone:'Asia/Seoul'});
-}
-
-function showModal(item){
-  document.getElementById("modalOverlay").style.display="flex";
-  document.getElementById("modalBody").innerHTML=`
-    🕒 ${formatTime(parseKST(item.time))}<br>
-    🚨 ${item.type}<br>
-    🏠 ${item.address}<br>
-    📞 ${item.phone||''}<br>
-    📝 ${item.symptom||''}<br>
-    상태: ${item.status||''}
-  `;
-}
-    
-function closeModal(){
-  document.getElementById("modalOverlay").style.display="none";
-}
-
-function renderData(data){
-  document.getElementById("listArea").innerHTML="";
-  markers.forEach(m=>m.setMap(null));
-  markers=[];
-
-  let bounds=new kakao.maps.LatLngBounds();
-
-  data.forEach(item=>{
-    const lat=parseFloat(item.lat||item.latitude);
-    const lng=parseFloat(item.lng||item.longitude);
-
-    if(!isNaN(lat)&&!isNaN(lng)){
-      const marker=new kakao.maps.Marker({
-        map:map,
-        position:new kakao.maps.LatLng(lat,lng)
-      });
-      marker.item=item;
-      kakao.maps.event.addListener(marker,'click',()=>showModal(item));
-      markers.push(marker);
-      bounds.extend(marker.getPosition());
-    }
-
-    const div=document.createElement("div");
-    div.className="card";
-    div.innerText=`${formatTime(parseKST(item.time))} | ${item.type} | ${item.address}`;
-    div.onclick=()=>showModal(item);
-    document.getElementById("listArea").appendChild(div);
-  });
-
-  if(markers.length>0) map.setBounds(bounds);
-
-  renderTable(data);
-}
-
-function renderTable(data){
-  const tbody=document.querySelector("#sheetTable tbody");
-  tbody.innerHTML="";
-  data.forEach(item=>{
-    const tr=document.createElement("tr");
-    tr.innerHTML=`
-      <td>${formatTime(parseKST(item.time))}</td>
-      <td>${item.type}</td>
-      <td>${item.address}</td>
-      <td>${item.phone||''}</td>
-      <td>${item.symptom||''}</td>
-      <td>${item.status||''}</td>
-    `;
-    tbody.appendChild(tr);
-  });
-}
-
-async function loadData(){
-  try{
-    const res = await fetch(RESCUE_API + "?action=list");
-    let data=await res.json();
-    if(!Array.isArray(data)) let allData = [];
-    allData=data;
-    renderData(allData);
-  }catch(e){
-    document.getElementById("listArea").innerText="❌ 오류";
-  }
-}
-    
-/* TODAY */
-async function loadTodaySchedule(){
-
-  const res = await fetch(
-    NOTICE_API + "?action=today"
-  );
-
-  const data = await res.json();
-
-  let html = "";
-
-  if(data.length === 0){
-    html = "오늘 등록된 일정이 없습니다.";
-  }else{
-    data.forEach(item=>{
-      html += `
-        <div>
-          ⏰ ${item.time}
-          - ${item.title}
-        </div>
-      `;
-    });
-  }
-
-  document.getElementById("todaySchedule").innerHTML = html;
-}
-    
-/* INIT */
-window.addEventListener("load",()=>{
-  loadTodaySchedule();
-
-  if(sessionStorage.getItem("login")==="ok"){
-    loginPage.style.display="none";
-    mainPage.style.display="block";
-    initMap();
-    loadNotice();
-    loadRescue();
-  }
-});
-
-setInterval(loadData,5000);
-    
+/* ===== 5초마다 갱신 ===== */
+setInterval(loadData, 15000); // 15초
 </script>
-
-<!-- MODAL 추가 위치 -->
-<div id="modalOverlay" style="display:none;
-position:fixed;
-top:0;left:0;
-width:100%;height:100%;
-background:rgba(0,0,0,0.6);
-z-index:9999;
-justify-content:center;
-align-items:center;">
-
-  <div style="background:#fff;padding:20px;border-radius:10px;width:90%;max-width:500px;">
-    <button onclick="closeModal()">닫기</button>
-    <div id="modalBody"></div>
-  </div>
-
-</div>    
-
     
 </body>
 </html>
