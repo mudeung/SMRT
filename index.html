@@ -33,7 +33,7 @@ button{margin-top:10px;padding:10px 15px;border:none;background:#0b4f2f;color:wh
 footer{background:#0b4f2f;color:white;text-align:center;padding:20px;}
 #modalBody {max-height: 80vh; overflow-y: auto;}
 
-/* 📊 사고현황 데이터 테이블 반응형 레이아웃 구성 */
+/* 📊 테이블 스캔 시 시인성을 높이기 위한 구조대 스타일 적용 */
 .table-responsive { width: 100%; overflow-x: auto; margin-top: 20px; border-radius: 10px; box-shadow: 0 2px 10px rgba(0,0,0,0.05); }
 table { width: 100%; border-collapse: collapse; background: #fff; text-align: center; min-width: 650px; }
 th, td { padding: 12px 15px; border: 1px solid #e1e4e6; }
@@ -82,7 +82,8 @@ tr:hover { background-color: #f1f3f5; cursor: pointer; }
 <section id="rescue">
   <h2 class="section-title">🚨 실시간 사고현황</h2>
   <div id="map"></div>
-  <div id="listArea">로딩중...</div>
+  
+  <div id="listArea" style="display:none;"></div>
   
   <div class="table-responsive">
     <table id="sheetTable">
@@ -359,17 +360,16 @@ async function loadData() {
         renderData(allData);
     } catch (err) {
         console.error("사고현황 로드 실패:", err);
-        document.getElementById("listArea").innerText = "❌ 실시간 사고 데이터를 불러오지 못했습니다.";
     }
 }
 
 function renderData(data) {
+    // ❌ 불필요한 글자 카드 생성을 막기 위해 내부 리스트 추가 로직을 삭제했습니다.
     document.getElementById("listArea").innerHTML = "";
     markers.forEach(m => m.setMap(null));
     markers = [];
 
     if(!data || data.length === 0) {
-        document.getElementById("listArea").innerHTML = "<div class='card'>접수된 실시간 사고가 없습니다.</div>";
         const tbody = document.querySelector("#sheetTable tbody");
         if(tbody) tbody.innerHTML = "<tr><td colspan='6' style='padding:20px; color:#777;'>접수된 실시간 사고가 없습니다.</td></tr>";
         return;
@@ -393,17 +393,11 @@ function renderData(data) {
             bounds.extend(marker.getPosition());
             hasValidMarker = true;
         }
-
-        const div = document.createElement("div");
-        div.className = "card";
-        div.style.cursor = "pointer";
-        div.innerText = `${formatTime(parseKST(item.time))} | ${item.type || '일반'} | ${item.address || '위치 미지정'}`;
-        div.onclick = () => showModal(item);
-        document.getElementById("listArea").appendChild(div);
     });
 
     if (hasValidMarker && map) map.setBounds(bounds);
 
+    // 하단 정식 상황판 테이블 호출
     renderTable(data);
 }
 
@@ -416,7 +410,6 @@ function renderTable(data){
         const tr = document.createElement("tr");
         tr.onclick = () => showModal(item);
         
-        // 데이터 출력 포맷 보완 및 상태 뱃지 스타일 적용
         tr.innerHTML = `
             <td>${formatTime(parseKST(item.time))}</td>
             <td><strong>${item.type || '일반'}</strong></td>
