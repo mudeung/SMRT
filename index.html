@@ -297,7 +297,7 @@ function initMap() {
 
 /* ===== NOTICE ===== */
 async function loadNotice() {
-    const res = await fetch(NOTICE_API);
+    const res = await fetch(NOTICE_API + "?t=" + Date.now());
     const data = await res.json();
 
     let html = "";
