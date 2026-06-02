@@ -412,78 +412,108 @@ async function saveNotice(fileUrl){
 }
 
 /* RESCUE */
-async function loadRescue() {
+window.onload=function(){
+  initMap();
+  loadData();
+  setInterval(loadData,10000);
+};
 
-  const res = await fetch(RESCUE_API + "?action=list");
-  const data = await res.json();
+/* ✅ 수정된 시간 함수 */
+function parseKST(dateStr){
+  if(!dateStr) return null;
+  const d = new Date(dateStr);
+  if(isNaN(d)) return null;
+  return d; // ❗ +9시간 제거
+}
 
-  listArea.innerHTML = "";
+function formatTime(date){
+  return date.toLocaleString('ko-KR',{timeZone:'Asia/Seoul'});
+}
 
-  // 기존 마커 제거
-  markers.forEach(m => m.setMap(null));
-  markers = [];
-
-  data.sort((a, b) => new Date(b.time) - new Date(a.time));
-
-  data.forEach(item => {
-
-    // 완료 제외
-    if (
-      item.status === "완료" ||
-      item.status === "처리완료" ||
-      item.state === "완료" ||
-      item.progress === "완료" ||
-      item.done === true
-    ) {
-      return;
-    }
-
-    const div = document.createElement("div");
-    div.className = "card";
-
-    // 목록은 간단하게 (요약)
-    div.innerHTML = `
-      🚨 ${item.type ?? ""}<br>
-      🕒 ${item.time ?? ""}<br>
-      📍 ${item.address ?? item.location ?? ""}
-    `;
-
-    // 클릭하면 모달
-    div.onclick = () => showModal(item);
-
-    listArea.appendChild(div);
-
-    // 지도 마커
-    if (item.lat && item.lng) {
-      const pos = new kakao.maps.LatLng(item.lat, item.lng);
-      const marker = new kakao.maps.Marker({
-        map: map,
-        position: pos
-      });
-
-      markers.push(marker);
-    }
+function initMap(){
+  map=new kakao.maps.Map(document.getElementById("map"),{
+    center:new kakao.maps.LatLng(35.1345,126.9902),
+    level:6
   });
 }
 
-
-// ==============================
-// 🔥 모달 표시 함수
-// ==============================
-function showModal(item) {
-
-  document.getElementById("modalOverlay").style.display = "flex";
-
-  document.getElementById("modalBody").innerHTML = `
+function showModal(item){
+  document.getElementById("modalOverlay").style.display="flex";
+  document.getElementById("modalBody").innerHTML=`
     🕒 ${formatTime(parseKST(item.time))}<br>
     🚨 ${item.type}<br>
     🏠 ${item.address}<br>
-    📞 ${item.phone || ''}<br>
-    📝 ${item.symptom || ''}<br>
-    상태: ${item.status || ''}
-    <hr>
-    <pre>${JSON.stringify(item, null, 2)}</pre>
+    📞 ${item.phone||''}<br>
+    📝 ${item.symptom||''}<br>
+    상태: ${item.status||''}
   `;
+}
+
+function closeModal(){
+  document.getElementById("modalOverlay").style.display="none";
+}
+
+function renderData(data){
+  document.getElementById("listArea").innerHTML="";
+  markers.forEach(m=>m.setMap(null));
+  markers=[];
+
+  let bounds=new kakao.maps.LatLngBounds();
+
+  data.forEach(item=>{
+    const lat=parseFloat(item.lat||item.latitude);
+    const lng=parseFloat(item.lng||item.longitude);
+
+    if(!isNaN(lat)&&!isNaN(lng)){
+      const marker=new kakao.maps.Marker({
+        map:map,
+        position:new kakao.maps.LatLng(lat,lng)
+      });
+      marker.item=item;
+      kakao.maps.event.addListener(marker,'click',()=>showModal(item));
+      markers.push(marker);
+      bounds.extend(marker.getPosition());
+    }
+
+    const div=document.createElement("div");
+    div.className="card";
+    div.innerText=`${formatTime(parseKST(item.time))} | ${item.type} | ${item.address}`;
+    div.onclick=()=>showModal(item);
+    document.getElementById("listArea").appendChild(div);
+  });
+
+  if(markers.length>0) map.setBounds(bounds);
+
+  renderTable(data);
+}
+
+function renderTable(data){
+  const tbody=document.querySelector("#sheetTable tbody");
+  tbody.innerHTML="";
+  data.forEach(item=>{
+    const tr=document.createElement("tr");
+    tr.innerHTML=`
+      <td>${formatTime(parseKST(item.time))}</td>
+      <td>${item.type}</td>
+      <td>${item.address}</td>
+      <td>${item.phone||''}</td>
+      <td>${item.symptom||''}</td>
+      <td>${item.status||''}</td>
+    `;
+    tbody.appendChild(tr);
+  });
+}
+
+async function loadData(){
+  try{
+    const res=await fetch(API_URL+"?action=list");
+    let data=await res.json();
+    if(!Array.isArray(data)) data=[];
+    allData=data;
+    renderData(allData);
+  }catch(e){
+    document.getElementById("listArea").innerText="❌ 오류";
+  }
 }
     
 /* TODAY */
