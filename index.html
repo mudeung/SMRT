@@ -433,15 +433,32 @@ async function loadRescue(){
 }
 
 /* TODAY */
-function loadTodaySchedule(){
-  const today = document.getElementById("todaySchedule");
+async function loadTodaySchedule(){
 
-  if(today){
-    today.innerHTML =
-      `📅 ${new Date().toLocaleDateString('ko-KR')}`;
+  const res = await fetch(
+    CALENDAR_API + "?action=today"
+  );
+
+  const data = await res.json();
+
+  let html = "";
+
+  if(data.length === 0){
+    html = "오늘 등록된 일정이 없습니다.";
+  }else{
+    data.forEach(item=>{
+      html += `
+        <div>
+          ⏰ ${item.time}
+          - ${item.title}
+        </div>
+      `;
+    });
   }
-}
 
+  document.getElementById("todaySchedule").innerHTML = html;
+}
+    
 /* INIT */
 window.addEventListener("load",()=>{
   loadTodaySchedule();
