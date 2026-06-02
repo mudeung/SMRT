@@ -261,17 +261,22 @@ const RESCUE_API = "https://script.google.com/macros/s/AKfycbwUbacHm34YkWh--zL_e
 
 /* LOGIN */
 function login(){
+
   const id = userid.value;
   const pw = password.value;
 
   if(id==="rescue" && pw==="knps"){
+
     sessionStorage.setItem("login","ok");
+
     loginPage.style.display="none";
     mainPage.style.display="block";
+
     initMap();
     loadNotice();
     loadRescue();
-    loadTodaySchedule();   // 추가
+    loadTodaySchedule();   // ✅ 여기만 유지
+
   } else {
     loginMsg.textContent="로그인 실패";
   }
