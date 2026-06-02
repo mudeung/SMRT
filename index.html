@@ -327,10 +327,12 @@ async function loadData() {
     try {
         const res = await fetch(RESCUE_API + "?t=" + Date.now());
         const data = await res.json();
+
+        console.log("RESCUE DATA:", data);
+
         renderData(data);
     } catch (err) {
-        console.error("사고현황 로드 실패:", err);
-        document.getElementById("listArea").innerText = "사고현황 로드 실패";
+        console.error(err);
     }
 }
 
