@@ -32,6 +32,11 @@ button{margin-top:10px;padding:10px 15px;border:none;background:#0b4f2f;color:wh
 .today-box{background:#fff;padding:15px;border-radius:10px;margin-bottom:15px;box-shadow:0 2px 10px rgba(0,0,0,0.1);}
 footer{background:#0b4f2f;color:white;text-align:center;padding:20px;}
 #modalBody {max-height: 80vh; overflow-y: auto;}
+
+/* 테이블 스타일 추가 (필요시 사용) */
+table {width:100%; border-collapse:collapse; margin-top:15px; background:#fff;}
+th, td {border:1px solid #ddd; padding:8px; text-align:center;}
+th {background-color:#0b4f2f; color:white;}
 </style>
 </head>
 <body>
@@ -75,6 +80,15 @@ footer{background:#0b4f2f;color:white;text-align:center;padding:20px;}
   <h2 class="section-title">🚨 실시간 사고현황</h2>
   <div id="map"></div>
   <div id="listArea">로딩중...</div>
+  
+  <table id="sheetTable" style="display:none;">
+    <thead>
+      <tr>
+        <th>시간</th><th>구분</th><th>주소</th><th>연락처</th><th>증상</th><th>상태</th>
+      </tr>
+    </thead>
+    <tbody></tbody>
+  </table>
 </section>
 
 <audio id="alertSound">
@@ -162,14 +176,14 @@ src="https://calendar.google.com/calendar/embed?src=35f4e5ad17b2ce6c5ae379ff9dda
 <script src="https://dapi.kakao.com/v2/maps/sdk.js?appkey=ff9e145029506d6e4c72d1f2b01ea424"></script>
 
 <script>
-/* ================= API ================= */
+/* ================= API 설정 ================= */
 const NOTICE_API = "https://script.google.com/macros/s/AKfycbx0RIpxdlgEZVA3CBjVLT1SWhH7cYOLePudYd1n_o_x2D3HaaD-FXLQk-_5D-aooQG0/exec";
 const RESCUE_API = "https://script.google.com/macros/s/AKfycbwUbacHm34YkWh--zL_e590P6h4S5wQo3iF8tCVZu71ZaTunTwdZ1TMLVqkyuHu-izW/exec";
 
-/* ===== 전역변수 ===== */
+/* ===== 전역 변수 ===== */
 let map, markers = [], allData = [];
 
-/* ===== LOGIN ===== */
+/* ===== LOGIN 기능 ===== */
 function login() {
     const id = document.getElementById("userid").value;
     const pw = document.getElementById("password").value;
@@ -183,23 +197,22 @@ function login() {
         initMap();
         loadNotice();
         loadTodaySchedule();
-        loadData(); /* ✅ 로그인 직후 실시간 사고 데이터를 즉시 로드하도록 수정 */
-
+        loadData(); // 로그인 직후 실시간 사고 데이터 즉시 로드
     } else {
         document.getElementById("loginMsg").textContent = "로그인 실패";
     }
 }
 
-/* ===== MAP ===== */
+/* ===== MAP 초기화 ===== */
 function initMap() {
-    if(map) return; // 이미 지도가 생성되었다면 중복 생성 방지
+    if (map) return; // 중복 생성 방지
     map = new kakao.maps.Map(document.getElementById("map"), {
         center: new kakao.maps.LatLng(35.1345, 126.9902),
         level: 6
     });
 }
 
-/* ===== NOTICE ===== */
+/* ===== NOTICE (공지사항) 기능 ===== */
 async function loadNotice() {
     try {
         const res = await fetch(NOTICE_API + "?t=" + Date.now());
@@ -233,7 +246,7 @@ function renderNotice(data) {
             </div>
         `;
 
-        // 최근 3개 미리보기 프리뷰 생성
+        // 최근 3개 프리뷰 생성
         if (i >= data.length - 3) {
             previewHtml += `
                 <div class="card" style="border-left: 5px solid #0b4f2f;">
@@ -253,12 +266,11 @@ async function deleteNotice(id, btnElement) {
     if (!confirm("삭제하시겠습니까?")) return;
 
     try {
-        // 구글 웹앱과의 안정적인 통신을 위해 옵션 최적화
         const res = await fetch(NOTICE_API, {
             method: "POST",
-            mode: "cors", // CORS 정책 허용 촉구
+            mode: "cors",
             headers: { 
-                "Content-Type": "text/plain" // JSON 대신 text/plain을 쓰면 CORS 프리플라이트를 우회하여 에러 확률이 줄어듭니다.
+                "Content-Type": "text/plain"
             },
             body: JSON.stringify({ mode: "delete", id: String(id) })
         });
@@ -267,7 +279,7 @@ async function deleteNotice(id, btnElement) {
 
         if (result.trim() === "ok") { 
             btnElement.closest(".card").remove();
-            if (typeof loadNotice === "function") loadNotice(); // 목록 새로고침
+            if (typeof loadNotice === "function") loadNotice(); 
             alert("삭제되었습니다.");
         } else {
             alert("삭제 실패: " + result);
@@ -321,30 +333,30 @@ async function saveNotice(fileUrl) {
             })
         });
 
-        // 입력 폼 비우기
         document.getElementById("noticeTitle").value = "";
         document.getElementById("noticeContent").value = "";
         document.getElementById("noticeFile").value = "";
 
-        // 공지 목록 새로고침
         loadNotice();
     } catch(err) {
         alert("공지 저장 실패");
     }
 }
 
-/* ===== RESCUE DATA ===== */
+/* ===== RESCUE DATA (사고 현황) 기능 ===== */
 async function loadData() {
-    // 로그인 안 되어있으면 폴링 중단
     if (sessionStorage.getItem("login") !== "ok") return;
 
     try {
         const res = await fetch(RESCUE_API + "?t=" + Date.now());
-        const data = await res.json();
-        console.log("RESCUE DATA:", data);
-        renderData(data);
+        let data = await res.json();
+        if (!Array.isArray(data)) data = [];
+        allData = data;
+        renderData(allData);
     } catch (err) {
         console.error("사고현황 로드 실패:", err);
+        const listArea = document.getElementById("listArea");
+        if(listArea) listArea.innerText = "❌ 오류";
     }
 }
 
@@ -386,8 +398,30 @@ function renderData(data) {
     });
 
     if (hasValidMarker && map) map.setBounds(bounds);
+
+    // 테이블 렌더링 호출 통합
+    renderTable(data);
 }
 
+function renderTable(data){
+    const tbody = document.querySelector("#sheetTable tbody");
+    if(!tbody) return; // 엘리먼트가 존재할 때만 실행
+    tbody.innerHTML = "";
+    data.forEach(item => {
+        const tr = document.createElement("tr");
+        tr.innerHTML = `
+            <td>${formatTime(parseKST(item.time))}</td>
+            <td>${item.type || ''}</td>
+            <td>${item.address || ''}</td>
+            <td>${item.phone || ''}</td>
+            <td>${item.symptom || ''}</td>
+            <td>${item.status || ''}</td>
+        `;
+        tbody.appendChild(tr);
+    });
+}
+
+/* ===== 시간 및 유틸리티 함수 ===== */
 function parseKST(dateStr) {
     if (!dateStr) return null;
     const d = new Date(dateStr);
@@ -396,7 +430,7 @@ function parseKST(dateStr) {
 }
 
 function formatTime(date) {
-    if (!date) return "시간 정보 없음"; /* ✅ 데이트 객체가 null일 때 예외처리 방어코드 추가 */
+    if (!date) return "시간 정보 없음";
     return date.toLocaleString('ko-KR', { timeZone: 'Asia/Seoul' });
 }
 
@@ -417,7 +451,7 @@ function closeModal() {
     document.getElementById("modalOverlay").style.display = "none";
 }
 
-/* ===== TODAY SCHEDULE ===== */
+/* ===== TODAY SCHEDULE (오늘 일정) 기능 ===== */
 async function loadTodaySchedule() {
     try {
         const res = await fetch(NOTICE_API + "?action=today");
@@ -437,22 +471,21 @@ async function loadTodaySchedule() {
     }
 }
 
-/* ===== INIT ===== */
+/* ===== 초기 구동 브라우저 로드 이벤트 통합 ===== */
 window.addEventListener("load", () => {
     if (sessionStorage.getItem("login") === "ok") {
         document.getElementById("loginPage").style.display = "none";
-        document.getElementById("mainPage").style.block = "block"; // 혹은 grid 등 오타방지 위해 원래코드 유지
         document.getElementById("mainPage").style.display = "block";
         initMap();
         loadNotice();
         loadTodaySchedule();
         loadData();
     } else {
-        loadTodaySchedule(); // 로그인 안되었어도 오늘 일정 프리뷰는 노출시도 시 기존 유지
+        loadTodaySchedule(); // 로그인 전이라도 오늘 일정 노출 시도
     }
 });
 
-/* ===== 실시간 데이터 갱신 (15초) ===== */
+/* ===== 실시간 데이터 갱신 (15초 주기) ===== */
 setInterval(loadData, 15000); 
 </script>
 </body>
