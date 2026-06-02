@@ -322,6 +322,17 @@ async function loadNotice() {
     const data = await res.json();
     renderNotice(data);
 }
+    /* ✅ 여기 추가 */
+async function loadData() {
+    try {
+        const res = await fetch(RESCUE_API + "?t=" + Date.now());
+        const data = await res.json();
+        renderData(data);
+    } catch (err) {
+        console.error("사고현황 로드 실패:", err);
+        document.getElementById("listArea").innerText = "사고현황 로드 실패";
+    }
+}
 
 function renderData(data) {
     document.getElementById("listArea").innerHTML = "";
