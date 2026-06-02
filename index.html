@@ -336,7 +336,6 @@ async function loadNotice() {
 
 function renderNotice(data) {
     let html = "";
-    let previewHtml = "";
 
     for (let i = data.length - 1; i >= 0; i--) {
 
@@ -345,7 +344,9 @@ function renderNotice(data) {
                 <h3>${data[i][1]}</h3>
                 <p style="white-space:pre-line">${data[i][2]}</p>
                 <small>${data[i][3] || ""}</small><br>
+
                 ${data[i][4] ? `<a href="${data[i][4]}" target="_blank">첨부파일</a>` : ""}
+
                 <br><br>
                 <button onclick="deleteNotice('${data[i][0]}', this)" style="background:#c0392b;">
                     삭제
@@ -355,7 +356,6 @@ function renderNotice(data) {
     }
 
     document.getElementById("noticeList").innerHTML = html;
-    document.getElementById("noticePreview").innerHTML = previewHtml;
 }
     
 async function deleteNotice(id, btnElement) {
@@ -418,16 +418,10 @@ async function saveNotice(fileUrl) {
 }
 
 /* ===== RESCUE ===== */
-async function loadData() {
-    try {
-        const res = await fetch(RESCUE_API + "?action=list");
-        let data = await res.json();
-        if (!Array.isArray(data)) data = [];
-        allData = data;
-        renderData(allData);
-    } catch (e) {
-        document.getElementById("listArea").innerText = "❌ 오류";
-    }
+async function loadNotice() {
+    const res = await fetch(NOTICE_API + "?t=" + Date.now());
+    const data = await res.json();
+    renderNotice(data);
 }
 
 function renderData(data) {
