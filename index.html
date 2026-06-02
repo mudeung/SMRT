@@ -451,23 +451,27 @@ function closeModal() {
     document.getElementById("modalOverlay").style.display = "none";
 }
 
-/* ===== TODAY SCHEDULE (오늘 일정) 기능 ===== */
+/* ===== TODAY SCHEDULE (구글 캘린더 연동) ===== */
 async function loadTodaySchedule() {
     try {
-        const res = await fetch(NOTICE_API + "?action=today");
+        // 2026년 현재 날짜 기준 타임스탬프 및 날짜 파라미터 전달
+        const todayStr = new Date().toLocaleDateString('ko-KR', { timeZone: 'Asia/Seoul' });
+        const res = await fetch(`${NOTICE_API}?action=today&date=${encodeURIComponent(todayStr)}&t=${Date.now()}`);
         const data = await res.json();
 
         let html = "";
         if (!data || data.length === 0) {
-            html = "오늘 등록된 일정이 없습니다.";
+            html = "<div style='color:#777;'>📅 오늘 예정된 구글 캘린더 일정이 없습니다.</div>";
         } else {
             data.forEach(item => {
-                html += `<div>⏰ ${item.time || ''} - ${item.title || ''}</div>`;
+                // 시작 시간과 일정을 예쁘게 출력
+                html += `<div style="margin-bottom: 5px;">⏰ <strong>${item.time || '종일'}</strong> - ${item.title || '제목 없음'}</div>`;
             });
         }
         document.getElementById("todaySchedule").innerHTML = html;
     } catch(err) {
-        document.getElementById("todaySchedule").innerHTML = "일정을 불러오지 못했습니다.";
+        console.error("구글 캘린더 연동 실패:", err);
+        document.getElementById("todaySchedule").innerHTML = "<div style='color:red;'>❌ 구글 캘린더 일정을 불러오지 못했습니다.</div>";
     }
 }
 
