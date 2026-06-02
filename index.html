@@ -170,14 +170,16 @@ function login() {
     const pw = document.getElementById("password").value;
 
     if (id === "rescue" && pw === "knps") {
+
         sessionStorage.setItem("login", "ok");
+
         document.getElementById("loginPage").style.display = "none";
         document.getElementById("mainPage").style.display = "block";
 
         initMap();
         loadNotice();
-        loadData();
         loadTodaySchedule();
+
     } else {
         document.getElementById("loginMsg").textContent = "로그인 실패";
     }
