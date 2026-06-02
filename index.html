@@ -436,7 +436,7 @@ async function loadRescue(){
 async function loadTodaySchedule(){
 
   const res = await fetch(
-    CALENDAR_API + "?action=today"
+    NOTICE_API + "?action=today"
   );
 
   const data = await res.json();
