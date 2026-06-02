@@ -262,23 +262,23 @@ const RESCUE_API = "https://script.google.com/macros/s/AKfycbwUbacHm34YkWh--zL_e
 /* LOGIN */
 function login(){
 
-  const id = userid.value;
-  const pw = password.value;
+  const id = document.getElementById("userid").value;
+  const pw = document.getElementById("password").value;
 
-  if(id==="rescue" && pw==="knps"){
+  if(id === "rescue" && pw === "knps"){
 
     sessionStorage.setItem("login","ok");
 
-    loginPage.style.display="none";
-    mainPage.style.display="block";
+    document.getElementById("loginPage").style.display="none";
+    document.getElementById("mainPage").style.display="block";
 
     initMap();
     loadNotice();
     loadRescue();
-    loadTodaySchedule();   // ✅ 여기만 유지
+    loadTodaySchedule();
 
   } else {
-    loginMsg.textContent="로그인 실패";
+    document.getElementById("loginMsg").textContent="로그인 실패";
   }
 }
 
