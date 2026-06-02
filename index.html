@@ -280,7 +280,7 @@ function login(){
 
     initMap();
     loadNotice();
-    loadRescue();
+    loadData();
     loadTodaySchedule();
 
   } else {
@@ -507,7 +507,7 @@ async function loadData(){
   try{
     const res = await fetch(RESCUE_API + "?action=list");
     let data=await res.json();
-    if(!Array.isArray(data)) data=[];
+    if(!Array.isArray(data)) let allData = [];
     allData=data;
     renderData(allData);
   }catch(e){
