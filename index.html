@@ -205,7 +205,10 @@ async function loadNotice() {
 
 function renderNotice(data) {
     let html = "";
+    let previewHtml = "";
+
     for (let i = data.length - 1; i >= 0; i--) {
+        // 전체 공지
         html += `
             <div class="card">
                 <h3>${data[i][1] || ""}</h3>
@@ -216,8 +219,20 @@ function renderNotice(data) {
                 <button onclick="deleteNotice('${data[i][0]}', this)" style="background:#c0392b;">삭제</button>
             </div>
         `;
+
+        // 최근 3개 preview
+        if (i > data.length - 4) {
+            previewHtml += `
+                <div class="card">
+                    <h3>${data[i][1] || ""}</h3>
+                    <p style="white-space:pre-line">${data[i][2] || ""}</p>
+                </div>
+            `;
+        }
     }
+
     document.getElementById("noticeList").innerHTML = html;
+    document.getElementById("noticePreview").innerHTML = previewHtml;
 }
 
 async function deleteNotice(id, btnElement) {
