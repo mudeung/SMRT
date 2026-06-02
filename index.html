@@ -406,47 +406,54 @@ async function saveNotice(fileUrl){
 }
 
 /* RESCUE */
-async function loadRescue(){
+async function loadRescue() {
 
-  const res = await fetch(RESCUE_API+"?action=list");
+  const res = await fetch(RESCUE_API + "?action=list");
   const data = await res.json();
 
-  listArea.innerHTML="";
-  markers.forEach(m=>m.setMap(null));
-  markers=[];
+  listArea.innerHTML = "";
 
- data.sort((a,b)=>new Date(b.time)-new Date(a.time));
+  markers.forEach(m => m.setMap(null));
+  markers = [];
 
-data.forEach(item => {
+  data.sort((a, b) => new Date(b.time) - new Date(a.time));
 
-  // ✅ 사고처리완료 제외 (여기 추가)
-  if (
-    item.status === "완료" ||
-    item.status === "처리완료" ||
-    item.state === "완료" ||
-    item.progress === "완료" ||
-    item.done === true
-  ) {
-    return;
-  }
+  data.forEach(item => {
 
-  const div=document.createElement("div");
-  div.className="card";
+    // ✅ 사고처리완료 제외
+    if (
+      item.status === "완료" ||
+      item.status === "처리완료" ||
+      item.state === "완료" ||
+      item.progress === "완료" ||
+      item.done === true
+    ) {
+      return;
+    }
 
-  div.innerHTML=`
-    🕒 ${new Date(item.time).toLocaleString()}<br>
-    📍 ${item.address ?? item.location ?? "위치 없음"}<br>
-    📝 ${item.symptom ?? item.memo ?? "내용 없음"}<br>
-  `;
+    const div = document.createElement("div");
+    div.className = "card";
 
-  listArea.appendChild(div);
+    div.innerHTML = `
+      🕒 ${new Date(item.time).toLocaleString()}<br>
+      📍 ${item.address ?? item.location ?? "위치 없음"}<br>
+      📝 ${item.symptom ?? item.memo ?? "내용 없음"}<br>
+    `;
 
-  if(item.lat && item.lng){
-    const pos=new kakao.maps.LatLng(item.lat,item.lng);
-    const marker=new kakao.maps.Marker({map,position:pos});
-    markers.push(marker);
-  }
+    listArea.appendChild(div);
 
+    if (item.lat && item.lng) {
+      const pos = new kakao.maps.LatLng(item.lat, item.lng);
+      const marker = new kakao.maps.Marker({
+        map: map,
+        position: pos
+      });
+      markers.push(marker);
+    }
+
+  }); // ✅ forEach 끝
+
+} // ✅ loadRescue 끝
     
 /* TODAY */
 async function loadTodaySchedule(){
