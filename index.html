@@ -338,15 +338,14 @@ async function loadNotice() {
 async function deleteNotice(id) {
     if (!confirm("삭제하시겠습니까?")) return;
 
-    await fetch(NOTICE_API, {
+    const res = await fetch(NOTICE_API, {
         method: "POST",
-        body: JSON.stringify({
-            mode: "delete",
-            id: String(id)
-        })
+        body: JSON.stringify({ mode: "delete", id: String(id) })
     });
 
-    loadNotice();
+    await res.text();
+
+    setTimeout(loadNotice, 300);
 }
     
 async function writeNotice() {
