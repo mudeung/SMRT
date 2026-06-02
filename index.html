@@ -264,20 +264,13 @@ async function deleteNotice(id, btnElement) {
 
     const res = await fetch(NOTICE_API, {
         method: "POST",
-        headers: {
-            "Content-Type": "application/json"
-        },
-        body: JSON.stringify({
-            mode: "delete",
-            id: String(id)
-        })
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ mode: "delete", id: String(id) })
     });
 
     const result = await res.text();
 
-    console.log("삭제 응답:", result);
-
-    if (result.trim() === "deleted") {
+    if (result === "ok") {  // 서버와 동일하게 "ok"로 비교
         btnElement.closest(".card").remove();
     } else {
         alert("삭제 실패: " + result);
