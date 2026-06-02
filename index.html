@@ -299,6 +299,8 @@ function initMap() {
 async function loadNotice() {
     const res = await fetch(NOTICE_API + "?t=" + Date.now());
     const data = await res.json();
+    renderNotice(data);
+}
 
     let html = "";
     let previewHtml = "";
@@ -332,20 +334,47 @@ async function loadNotice() {
     document.getElementById("noticePreview").innerHTML = previewHtml;
 }
 
+function renderNotice(data) {
+    let html = "";
+    let previewHtml = "";
+
+    for (let i = data.length - 1; i >= 0; i--) {
+
+        html += `
+            <div class="card">
+                <h3>${data[i][1]}</h3>
+                <p style="white-space:pre-line">${data[i][2]}</p>
+                <small>${data[i][3] || ""}</small><br>
+                ${data[i][4] ? `<a href="${data[i][4]}" target="_blank">첨부파일</a>` : ""}
+                <br><br>
+                <button onclick="deleteNotice('${data[i][0]}', this)" style="background:#c0392b;">
+                    삭제
+                </button>
+            </div>
+        `;
+    }
+
+    document.getElementById("noticeList").innerHTML = html;
+    document.getElementById("noticePreview").innerHTML = previewHtml;
+}
+    
 async function deleteNotice(id, btnElement) {
     if (!confirm("삭제하시겠습니까?")) return;
 
-    try {
-        await fetch(NOTICE_API, {
-            method: "POST",
-            body: JSON.stringify({ mode: "delete", id: String(id) })
-        });
+    const res = await fetch(NOTICE_API, {
+        method: "POST",
+        headers: {
+            "Content-Type": "application/json"
+        },
+        body: JSON.stringify({ mode: "delete", id: String(id) })
+    });
 
-        // 삭제 버튼이 속한 카드 요소를 DOM에서 제거
-        btnElement.closest('.card').remove();
-    } catch (err) {
-        alert("삭제 중 오류 발생");
-        console.error(err);
+    const result = await res.text();
+
+    if (result === "ok") {
+        btnElement.closest(".card").remove();
+    } else {
+        alert("삭제 실패: " + result);
     }
 }
     
