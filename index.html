@@ -412,10 +412,17 @@ async function saveNotice(fileUrl){
 }
 
 /* RESCUE */
-window.onload = function(){
-  initMap();
-  loadRescue();
-};
+window.addEventListener("load",()=>{
+  loadTodaySchedule();
+
+  if(sessionStorage.getItem("login")==="ok"){
+    loginPage.style.display="none";
+    mainPage.style.display="block";
+    initMap();
+    loadNotice();
+    loadData();   // ⭐ 여기
+  }
+});
 
 /* ✅ 수정된 시간 함수 */
 function parseKST(dateStr){
@@ -438,9 +445,8 @@ function showModal(item){
     📞 ${item.phone||''}<br>
     📝 ${item.symptom||''}<br>
     상태: ${item.status||''}
- `;
+  `;
 }
-
     
 function closeModal(){
   document.getElementById("modalOverlay").style.display="none";
