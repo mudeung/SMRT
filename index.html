@@ -33,10 +33,13 @@ button{margin-top:10px;padding:10px 15px;border:none;background:#0b4f2f;color:wh
 footer{background:#0b4f2f;color:white;text-align:center;padding:20px;}
 #modalBody {max-height: 80vh; overflow-y: auto;}
 
-/* 테이블 스타일 추가 (필요시 사용) */
-table {width:100%; border-collapse:collapse; margin-top:15px; background:#fff;}
-th, td {border:1px solid #ddd; padding:8px; text-align:center;}
-th {background-color:#0b4f2f; color:white;}
+/* 📊 사고현황 데이터 테이블 반응형 레이아웃 구성 */
+.table-responsive { width: 100%; overflow-x: auto; margin-top: 20px; border-radius: 10px; box-shadow: 0 2px 10px rgba(0,0,0,0.05); }
+table { width: 100%; border-collapse: collapse; background: #fff; text-align: center; min-width: 650px; }
+th, td { padding: 12px 15px; border: 1px solid #e1e4e6; }
+th { background-color: #0b4f2f; color: white; font-weight: bold; }
+tr:nth-child(even) { background-color: #f8f9fa; }
+tr:hover { background-color: #f1f3f5; cursor: pointer; }
 </style>
 </head>
 <body>
@@ -81,14 +84,18 @@ th {background-color:#0b4f2f; color:white;}
   <div id="map"></div>
   <div id="listArea">로딩중...</div>
   
-  <table id="sheetTable" style="display:none;">
-    <thead>
-      <tr>
-        <th>시간</th><th>구분</th><th>주소</th><th>연락처</th><th>증상</th><th>상태</th>
-      </tr>
-    </thead>
-    <tbody></tbody>
-  </table>
+  <div class="table-responsive">
+    <table id="sheetTable">
+      <thead>
+        <tr>
+          <th>시간</th><th>구분</th><th>주소</th><th>연락처</th><th>증상</th><th>상태</th>
+        </tr>
+      </thead>
+      <tbody>
+        <tr><td colspan="6" style="padding:20px; color:#777;">데이터를 불러오는 중입니다...</td></tr>
+      </tbody>
+    </table>
+  </div>
 </section>
 
 <audio id="alertSound">
@@ -197,7 +204,7 @@ function login() {
         initMap();
         loadNotice();
         loadTodaySchedule();
-        loadData(); // 로그인 직후 실시간 사고 데이터 즉시 로드
+        loadData(); 
     } else {
         document.getElementById("loginMsg").textContent = "로그인 실패";
     }
@@ -205,7 +212,7 @@ function login() {
 
 /* ===== MAP 초기화 ===== */
 function initMap() {
-    if (map) return; // 중복 생성 방지
+    if (map) return; 
     map = new kakao.maps.Map(document.getElementById("map"), {
         center: new kakao.maps.LatLng(35.1345, 126.9902),
         level: 6
@@ -227,14 +234,15 @@ function renderNotice(data) {
     let html = "";
     let previewHtml = "";
 
-    if (!data || data.length === 0) {
+    if (!data || data.length <= 1) {
         document.getElementById("noticeList").innerHTML = "<div class='card'>등록된 업무공지가 없습니다.</div>";
         document.getElementById("noticePreview").innerHTML = "";
         return;
     }
 
-    for (let i = data.length - 1; i >= 0; i--) {
-        // 전체 공지 생성
+    for (let i = data.length - 1; i >= 1; i--) {
+        if(!data[i][0]) continue;
+        
         html += `
             <div class="card">
                 <h3>${data[i][1] || "제목 없음"}</h3>
@@ -246,7 +254,6 @@ function renderNotice(data) {
             </div>
         `;
 
-        // 최근 3개 프리뷰 생성
         if (i >= data.length - 3) {
             previewHtml += `
                 <div class="card" style="border-left: 5px solid #0b4f2f;">
@@ -258,7 +265,7 @@ function renderNotice(data) {
         }
     }
 
-    document.getElementById("noticeList").innerHTML = html;
+    document.getElementById("noticeList").innerHTML = html || "<div class='card'>등록된 업무공지가 없습니다.</div>";
     document.getElementById("noticePreview").innerHTML = previewHtml;
 }
     
@@ -269,9 +276,7 @@ async function deleteNotice(id, btnElement) {
         const res = await fetch(NOTICE_API, {
             method: "POST",
             mode: "cors",
-            headers: { 
-                "Content-Type": "text/plain"
-            },
+            headers: { "Content-Type": "text/plain" },
             body: JSON.stringify({ mode: "delete", id: String(id) })
         });
         
@@ -279,14 +284,14 @@ async function deleteNotice(id, btnElement) {
 
         if (result.trim() === "ok") { 
             btnElement.closest(".card").remove();
-            if (typeof loadNotice === "function") loadNotice(); 
+            loadNotice(); 
             alert("삭제되었습니다.");
         } else {
             alert("삭제 실패: " + result);
         }
     } catch(err) {
         console.error("상세 에러 로그:", err);
-        alert("통신 오류가 발생했습니다. 구글 스크립트 배포 설정을 확인해주세요.");
+        alert("통신 오류가 발생했습니다.");
     }
 }
     
@@ -336,7 +341,6 @@ async function saveNotice(fileUrl) {
         document.getElementById("noticeTitle").value = "";
         document.getElementById("noticeContent").value = "";
         document.getElementById("noticeFile").value = "";
-
         loadNotice();
     } catch(err) {
         alert("공지 저장 실패");
@@ -355,8 +359,7 @@ async function loadData() {
         renderData(allData);
     } catch (err) {
         console.error("사고현황 로드 실패:", err);
-        const listArea = document.getElementById("listArea");
-        if(listArea) listArea.innerText = "❌ 오류";
+        document.getElementById("listArea").innerText = "❌ 실시간 사고 데이터를 불러오지 못했습니다.";
     }
 }
 
@@ -367,6 +370,8 @@ function renderData(data) {
 
     if(!data || data.length === 0) {
         document.getElementById("listArea").innerHTML = "<div class='card'>접수된 실시간 사고가 없습니다.</div>";
+        const tbody = document.querySelector("#sheetTable tbody");
+        if(tbody) tbody.innerHTML = "<tr><td colspan='6' style='padding:20px; color:#777;'>접수된 실시간 사고가 없습니다.</td></tr>";
         return;
     }
 
@@ -399,23 +404,26 @@ function renderData(data) {
 
     if (hasValidMarker && map) map.setBounds(bounds);
 
-    // 테이블 렌더링 호출 통합
     renderTable(data);
 }
 
 function renderTable(data){
     const tbody = document.querySelector("#sheetTable tbody");
-    if(!tbody) return; // 엘리먼트가 존재할 때만 실행
+    if(!tbody) return; 
     tbody.innerHTML = "";
+    
     data.forEach(item => {
         const tr = document.createElement("tr");
+        tr.onclick = () => showModal(item);
+        
+        // 데이터 출력 포맷 보완 및 상태 뱃지 스타일 적용
         tr.innerHTML = `
             <td>${formatTime(parseKST(item.time))}</td>
-            <td>${item.type || ''}</td>
-            <td>${item.address || ''}</td>
-            <td>${item.phone || ''}</td>
-            <td>${item.symptom || ''}</td>
-            <td>${item.status || ''}</td>
+            <td><strong>${item.type || '일반'}</strong></td>
+            <td style="text-align:left;">${item.address || '위치 미정'}</td>
+            <td>${item.phone || '-'}</td>
+            <td style="text-align:left;">${item.symptom || '-'}</td>
+            <td><span style="background:#0b4f2f; color:#fff; padding:2px 6px; border-radius:4px; font-size:12px;">${item.status || '대기'}</span></td>
         `;
         tbody.appendChild(tr);
     });
@@ -431,7 +439,10 @@ function parseKST(dateStr) {
 
 function formatTime(date) {
     if (!date) return "시간 정보 없음";
-    return date.toLocaleString('ko-KR', { timeZone: 'Asia/Seoul' });
+    return date.toLocaleString('ko-KR', { 
+        year: 'numeric', month: '2-digit', day: '2-digit', 
+        hour: '2-digit', minute: '2-digit', timeZone: 'Asia/Seoul' 
+    });
 }
 
 function showModal(item) {
@@ -454,7 +465,6 @@ function closeModal() {
 /* ===== TODAY SCHEDULE (구글 캘린더 연동) ===== */
 async function loadTodaySchedule() {
     try {
-        // 2026년 현재 날짜 기준 타임스탬프 및 날짜 파라미터 전달
         const todayStr = new Date().toLocaleDateString('ko-KR', { timeZone: 'Asia/Seoul' });
         const res = await fetch(`${NOTICE_API}?action=today&date=${encodeURIComponent(todayStr)}&t=${Date.now()}`);
         const data = await res.json();
@@ -464,7 +474,6 @@ async function loadTodaySchedule() {
             html = "<div style='color:#777;'>📅 오늘 예정된 구글 캘린더 일정이 없습니다.</div>";
         } else {
             data.forEach(item => {
-                // 시작 시간과 일정을 예쁘게 출력
                 html += `<div style="margin-bottom: 5px;">⏰ <strong>${item.time || '종일'}</strong> - ${item.title || '제목 없음'}</div>`;
             });
         }
@@ -485,7 +494,7 @@ window.addEventListener("load", () => {
         loadTodaySchedule();
         loadData();
     } else {
-        loadTodaySchedule(); // 로그인 전이라도 오늘 일정 노출 시도
+        loadTodaySchedule(); 
     }
 });
 
