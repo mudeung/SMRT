@@ -249,9 +249,25 @@ function renderNotice(data) {
                 <h3>${data[i][1] || "제목 없음"}</h3>
                 <p style="white-space:pre-line">${data[i][2] || ""}</p>
                 <small>${data[i][3] || ""}</small><br>
-                ${data[i][4] ? `<a href="${data[i][4]}" target="_blank">첨부파일</a>` : ""}
-                <br><br>
-                <button onclick="deleteNotice('${data[i][0]}', this)" style="background:#c0392b;">삭제</button>
+                ${data[i][4] ? `
+<a href="${data[i][4]}" target="_blank">
+📎 ${data[i][6] || "첨부파일 다운로드"}
+</a>
+` : ""}
+
+<br><br>
+
+<button
+onclick="deleteNotice(
+'${data[i][0]}',
+'${data[i][5] || ""}',
+this
+)"
+style="background:#c0392b;">
+삭제
+</button>
+                
+                style="background:#c0392b;">삭제</button>
             </div>
         `;
 
@@ -270,29 +286,44 @@ function renderNotice(data) {
     document.getElementById("noticePreview").innerHTML = previewHtml;
 }
     
-async function deleteNotice(id, btnElement) {
+async function deleteNotice(id, fileId, btnElement) {
+
     if (!confirm("삭제하시겠습니까?")) return;
 
     try {
+
         const res = await fetch(NOTICE_API, {
             method: "POST",
-            mode: "cors",
-            headers: { "Content-Type": "text/plain" },
-            body: JSON.stringify({ mode: "delete", id: String(id) })
+            headers: {
+                "Content-Type": "text/plain"
+            },
+            body: JSON.stringify({
+                mode: "delete",
+                id: String(id),
+                fileId: fileId
+            })
         });
-        
+
         const result = await res.text();
 
-        if (result.trim() === "ok") { 
+        if(result.trim() === "ok"){
+
             btnElement.closest(".card").remove();
-            loadNotice(); 
-            alert("삭제되었습니다.");
-        } else {
-            alert("삭제 실패: " + result);
+
+            loadNotice();
+
+            alert("공지 및 첨부파일 삭제 완료");
+
+        }else{
+
+            alert("삭제 실패 : " + result);
         }
-    } catch(err) {
-        console.error("상세 에러 로그:", err);
-        alert("통신 오류가 발생했습니다.");
+
+    } catch(err){
+
+        console.error(err);
+
+        alert("통신 오류");
     }
 }
     
@@ -315,8 +346,13 @@ async function writeNotice() {
                     method: "POST",
                     body: JSON.stringify({ mode: "upload", file: base64, name: file.name, type: file.type })
                 });
-                const fileUrl = await upload.text();
-                await saveNotice(fileUrl);
+                const result = await upload.json();
+
+await saveNotice(
+    result.url,
+    result.fileId,
+    result.fileName
+);
             } catch(err) {
                 alert("파일 업로드 실패");
             }
@@ -327,23 +363,42 @@ async function writeNotice() {
     }
 }
 
-async function saveNotice(fileUrl) {
+async function saveNotice(
+    fileUrl,
+    fileId="",
+    fileName=""
+)
+{
     try {
-        await fetch(NOTICE_API, {
-            method: "POST",
-            body: JSON.stringify({
-                title: document.getElementById("noticeTitle").value,
-                content: document.getElementById("noticeContent").value,
-                writer: "구조대",
-                file: fileUrl
+
+        await fetch(NOTICE_API,{
+            method:"POST",
+            body:JSON.stringify({
+
+                title:
+                document.getElementById("noticeTitle").value,
+
+                content:
+                document.getElementById("noticeContent").value,
+
+                writer:"구조대",
+
+                file:fileUrl,
+
+                fileId:fileId,
+
+                fileName:fileName
             })
         });
 
-        document.getElementById("noticeTitle").value = "";
-        document.getElementById("noticeContent").value = "";
-        document.getElementById("noticeFile").value = "";
+        document.getElementById("noticeTitle").value="";
+        document.getElementById("noticeContent").value="";
+        document.getElementById("noticeFile").value="";
+
         loadNotice();
-    } catch(err) {
+
+    } catch(err){
+
         alert("공지 저장 실패");
     }
 }
