@@ -319,6 +319,7 @@ async function writeNotice() {
         return;
     }
 
+    // 파일이 있을 때
     if (file) {
         const reader = new FileReader();
 
@@ -346,12 +347,15 @@ async function writeNotice() {
                 }
 
             } catch (err) {
-                console.error(err);
+                console.error("업로드 에러:", err);
+                alert("파일 업로드 실패");
             }
         };
 
         reader.readAsDataURL(file);
+
     } else {
+        // 파일 없을 때
         await saveNotice("");
     }
 }
