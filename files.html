@@ -31,7 +31,7 @@
   <script>
     const SUPABASE_URL = "https://laghjfjpqpitxqjhkdlh.supabase.co";
 
-    const SUPABASE_ANON_KEY = "여기에 anon key 넣기";
+    const SUPABASE_ANON_KEY = "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImxhZ2hqZmpwcXBpdHhxamhrZGxoIiwicm9sZSI6ImFub24iLCJpYXQiOjE3ODA1NTE4NzgsImV4cCI6MjA5NjEyNzg3OH0.WKC02BiwrGDv7Ttp8NAtf73t0kDSgISpTtiMhWyeKJg";
 
     const client = window.supabase.createClient(
       SUPABASE_URL,
@@ -98,7 +98,7 @@
       const container = document.getElementById("posts");
       container.innerHTML = "";
 
-     data.forEach(post => {
+    data.forEach(post => {
   const div = document.createElement("div");
   div.className = "post";
 
