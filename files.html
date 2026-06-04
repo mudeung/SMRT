@@ -10,6 +10,7 @@
     .post { border: 1px solid #ddd; padding: 10px; margin-top: 10px; }
   </style>
 </head>
+
 <body>
 
   <h2>게시판</h2>
@@ -28,13 +29,21 @@
   <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
 
   <script>
-    // 🔥 본인 Supabase 정보 입력
+    /***********************
+     * 1. Supabase 설정
+     ***********************/
     const SUPABASE_URL = "https://laghjfjpqpitxqjhkdlh.supabase.co";
+
     const SUPABASE_ANON_KEY = "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImxhZ2hqZmpwcXBpdHhxamhrZGxoIiwicm9sZSI6ImFub24iLCJpYXQiOjE3ODA1NTE4NzgsImV4cCI6MjA5NjEyNzg3OH0.WKC02BiwrGDv7Ttp8NAtf73t0kDSgISpTtiMhWyeKJg";
 
-    const supabase = window.supabase.createClient(SUPABASE_URL, SUPABASE_ANON_KEY);
+    const client = window.supabase.createClient(
+      SUPABASE_URL,
+      SUPABASE_ANON_KEY
+    );
 
-    // 게시글 작성 + 파일 업로드
+    /***********************
+     * 2. 게시글 등록
+     ***********************/
     async function createPost() {
       const title = document.getElementById("title").value;
       const content = document.getElementById("content").value;
@@ -42,45 +51,53 @@
 
       let fileUrl = null;
 
-      // 1. 파일 업로드 (있을 경우)
-      if (file) {
-        const fileName = `${Date.now()}_${file.name}`;
+      try {
+        // 파일 업로드
+        if (file) {
+          const fileName = `${Date.now()}_${file.name}`;
 
-        const { data, error } = await supabase
-          .storage
-          .from("uploads")
-          .upload(fileName, file);
+          const { error: uploadError } = await client
+            .storage
+            .from("uploads")
+            .upload(fileName, file);
+
+          if (uploadError) {
+            alert("파일 업로드 실패: " + uploadError.message);
+            return;
+          }
+
+          const { data } = client
+            .storage
+            .from("uploads")
+            .getPublicUrl(fileName);
+
+          fileUrl = data.publicUrl;
+        }
+
+        // DB 저장
+        const { error } = await client
+          .from("posts")
+          .insert([{ title, content, file_url: fileUrl }]);
 
         if (error) {
-          alert("파일 업로드 실패: " + error.message);
+          alert("저장 실패: " + error.message);
           return;
         }
 
-        const { data: publicUrlData } = supabase
-          .storage
-          .from("uploads")
-          .getPublicUrl(fileName);
+        alert("등록 완료!");
+        loadPosts();
 
-        fileUrl = publicUrlData.publicUrl;
+      } catch (err) {
+        console.error(err);
+        alert("에러 발생");
       }
-
-      // 2. DB 저장
-      const { error } = await supabase
-        .from("posts")
-        .insert([{ title, content, file_url: fileUrl }]);
-
-      if (error) {
-        alert("저장 실패: " + error.message);
-        return;
-      }
-
-      alert("등록 완료!");
-      loadPosts();
     }
 
-    // 게시글 목록 불러오기
+    /***********************
+     * 3. 게시글 목록
+     ***********************/
     async function loadPosts() {
-      const { data, error } = await supabase
+      const { data, error } = await client
         .from("posts")
         .select("*")
         .order("created_at", { ascending: false });
@@ -108,7 +125,9 @@
       });
     }
 
-    // 초기 로딩
+    /***********************
+     * 4. 초기 실행
+     ***********************/
     loadPosts();
   </script>
 
