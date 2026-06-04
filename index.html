@@ -346,13 +346,11 @@ async function writeNotice() {
                 }
 
             } catch (err) {
-                console.error("업로드 에러:", err);
-                alert("업로드 실패");
+                console.error(err);
             }
         };
 
         reader.readAsDataURL(file);
-
     } else {
         await saveNotice("");
     }
@@ -399,7 +397,7 @@ async function writeNotice() {
         reader.readAsDataURL(file);
 
     } 
-
+} 
     
 /* ===== 게시글 최종 스프레드시트 저장 기능 ===== */
 async function saveNotice(fileUrl, fileId = "", fileName = "") {
