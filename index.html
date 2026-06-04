@@ -307,8 +307,10 @@ async function deleteNotice(id, fileId, btnElement) {
     }
 }
     
+/* ===== 업무공지 작성 및 파일 업로드 기능 ===== */
 async function writeNotice() {
-    const file = document.getElementById("noticeFile").files[0];
+    const fileInput = document.getElementById("noticeFile");
+    const file = fileInput.files[0];
     const title = document.getElementById("noticeTitle").value.trim();
     const content = document.getElementById("noticeContent").value.trim();
 
@@ -322,15 +324,27 @@ async function writeNotice() {
         reader.onload = async function () {
             const base64 = reader.result.split(",")[1];
             try {
-                const upload = await fetch(NOTICE_API, {
+                const response = await fetch(NOTICE_API, {
                     method: "POST",
-                    body: JSON.stringify({ mode: "upload", file: base64, name: file.name, type: file.type })
+                    headers: { "Content-Type": "text/plain" },
+                    body: JSON.stringify({ 
+                        mode: "upload", 
+                        file: base64, 
+                        name: file.name, 
+                        type: file.type 
+                    })
                 });
-                const result = await upload.json();
+                
+                const result = await response.json();
 
-                await saveNotice(result.url, result.fileId, result.fileName);
+                if (result.success) {
+                    await saveNotice(result.url, result.fileId, result.fileName);
+                } else {
+                    alert("파일 업로드 서버 오류 발생");
+                }
             } catch(err) {
-                alert("파일 업로드 실패");
+                console.error("파일 업로드 통신 에러:", err);
+                alert("파일 업로드 실패 (네트워크 오류 또는 권한 문제)");
             }
         };
         reader.readAsDataURL(file);
@@ -339,33 +353,36 @@ async function writeNotice() {
     }
 }
 
+/* ===== 게시글 최종 스프레드시트 저장 기능 ===== */
 async function saveNotice(fileUrl, fileId="", fileName="") {
     try {
-        const res = await fetch(NOTICE_API,{
-            method:"POST",
-            body:JSON.stringify({
+        const res = await fetch(NOTICE_API, {
+            method: "POST",
+            headers: { "Content-Type": "text/plain" },
+            body: JSON.stringify({
                 title: document.getElementById("noticeTitle").value,
                 content: document.getElementById("noticeContent").value,
-                writer:"구조대",
-                file:fileUrl,
-                fileId:fileId,
-                fileName:fileName
+                writer: "구조대",
+                file: fileUrl,
+                fileId: fileId,
+                fileName: fileName
             })
         });
 
         const result = await res.text();
         
         if (result.trim() === "ok") {
-            document.getElementById("noticeTitle").value="";
-            document.getElementById("noticeContent").value="";
-            document.getElementById("noticeFile").value="";
+            document.getElementById("noticeTitle").value = "";
+            document.getElementById("noticeContent").value = "";
+            document.getElementById("noticeFile").value = "";
             loadNotice();
             alert("공지가 성공적으로 등록되었습니다.");
         } else {
             alert("공지 저장 실패: " + result);
         }
     } catch(err){
-        alert("공지 저장 실패");
+        console.error("저장 에러:", err);
+        alert("공지 저장 중 통신 에러가 발생했습니다.");
     }
 }
 
