@@ -265,13 +265,8 @@ function renderNotice(data) {
                 <h3>${data[i][1] || "제목 없음"}</h3>
                 <p style="white-space:pre-line">${data[i][2] || ""}</p>
                 <small>${data[i][3] || ""}</small><br>
-                ${data[i][4] ? `
-                <a href="${data[i][4]}" target="_blank">
-                📎 ${data[i][6] || "첨부파일 다운로드"}
-                </a>
-                ` : ""}
-                <br><br>
-                <button onclick="deleteNotice('${data[i][0]}', '${data[i][5] || ""}', this)" style="background:#c0392b;">
+                         <br><br>
+                <button onclick="deleteNotice('${data[i][0]}', this)" style="background:#c0392b;">
                 삭제
                 </button>
             </div>
@@ -301,11 +296,10 @@ async function deleteNotice(id, fileId, btnElement) {
             headers: {
                 "Content-Type": "text/plain"
             },
-            body: JSON.stringify({
-                mode: "delete",
-                id: String(id),
-                fileId: fileId
-            })
+           body: JSON.stringify({
+    mode: "delete",
+    id: String(id)
+})
         });
 
         const result = await res.text();
@@ -325,8 +319,6 @@ async function deleteNotice(id, fileId, btnElement) {
     
 /* ===== 업무공지 작성 및 파일 업로드 기능 ===== */
 async function writeNotice() {
-    const fileInput = document.getElementById("noticeFile");
-    const file = fileInput.files[0];
     const title = document.getElementById("noticeTitle").value.trim();
     const content = document.getElementById("noticeContent").value.trim();
 
@@ -335,52 +327,13 @@ async function writeNotice() {
         return;
     }
 
-    if (file) {
-        const reader = new FileReader();
-        reader.onload = async function() {
-            const base64 = reader.result.split(",")[1];
-            try {
-                const response = await fetch(NOTICE_API, {
-                    method: "POST",
-                    headers: { "Content-Type": "text/plain" },
-                    body: JSON.stringify({ mode: "upload", file: base64, name: file.name, type: file.type })
-                });
-                const result = await response.json();
-                if (result.success) await saveNotice(result.url, result.fileId, result.fileName);
-                else alert("파일 업로드 실패");
-            } catch (err) {
-                console.error(err);
-                alert("파일 업로드 실패");
-            }
-        };
-        reader.readAsDataURL(file);
-    } else {
-        await saveNotice("");
-    }
+    await saveNotice();
 }
 
-/* ===== Drive 업로드 함수 ===== */    
-function uploadToDrive(base64, fileName, mimeType) {
-  const blob = Utilities.newBlob(
-    Utilities.base64Decode(base64),
-    mimeType,
-    fileName
-  );
 
-  const file = DriveApp.createFile(blob);
-
-  // 공개 링크 설정 (중요)
-  file.setSharing(DriveApp.Access.ANYONE_WITH_LINK, DriveApp.Permission.VIEW);
-
-  return {
-    fileId: file.getId(),
-    url: file.getUrl(),
-    name: file.getName()
-  };
-}
     
 /* ===== 게시글 최종 스프레드시트 저장 기능 ===== */
-async function saveNotice(fileUrl, fileId = "", fileName = "") {
+async function saveNotice() {
     try {
         const res = await fetch(NOTICE_API, {
             method: "POST",
@@ -388,10 +341,7 @@ async function saveNotice(fileUrl, fileId = "", fileName = "") {
             body: JSON.stringify({
                 title: document.getElementById("noticeTitle").value,
                 content: document.getElementById("noticeContent").value,
-                writer: "구조대",
-                file: fileUrl,
-                fileId: fileId,
-                fileName: fileName
+                writer: "구조대"
             })
         });
 
@@ -400,7 +350,6 @@ async function saveNotice(fileUrl, fileId = "", fileName = "") {
         if (result.trim() === "ok") {
             document.getElementById("noticeTitle").value = "";
             document.getElementById("noticeContent").value = "";
-            document.getElementById("noticeFile").value = "";
 
             loadNotice();
             alert("공지 등록 완료");
@@ -413,7 +362,7 @@ async function saveNotice(fileUrl, fileId = "", fileName = "") {
         alert("저장 실패");
     }
 }
-
+    
 /* ===== RESCUE DATA (사고 현황) 기능 ===== */
 async function loadData() {
     if (sessionStorage.getItem("login") !== "ok") return;
