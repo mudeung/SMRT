@@ -314,48 +314,89 @@ async function writeNotice() {
     const title = document.getElementById("noticeTitle").value.trim();
     const content = document.getElementById("noticeContent").value.trim();
 
-    if(!title || !content) {
+    if (!title || !content) {
         alert("제목과 내용을 모두 입력해주세요.");
         return;
     }
 
+// ================= 파일 있을 때 =================
     if (file) {
         const reader = new FileReader();
+
         reader.onload = async function () {
             const base64 = reader.result.split(",")[1];
+
             try {
-               const response = await fetch(NOTICE_API, {
-  method: "POST",
-  headers: { "Content-Type": "text/plain" },
-  body: JSON.stringify({
-    mode: "upload",
-    file: base64,
-    name: file.name,
-    type: file.type
-  })
-});
+                const response = await fetch(NOTICE_API, {
+                    method: "POST",
+                    headers: { "Content-Type": "text/plain" },
+                    body: JSON.stringify({
+                        mode: "upload",
+                        file: base64,
+                        name: file.name,
+                        type: file.type
+                    })
+                });
 
-const result = await response.json();
-
-const text = await response.text();
-console.log(text);
+                const result = await response.json();
 
                 if (result.success) {
-                    await saveNotice(result.url, result.fileId, result.fileName);
+                    await saveNotice(
+                        result.url,
+                        result.fileId,
+                        result.fileName
+                    );
                 } else {
-                    alert("파일 업로드 서버 오류 발생");
+                    alert("파일 업로드 실패");
+                    console.log(result);
                 }
-            } catch(err) {
-                console.error("파일 업로드 통신 에러:", err);
-                alert("파일 업로드 실패 (네트워크 오류 또는 권한 문제)");
+
+            } catch (err) {
+                console.error("업로드 에러:", err);
+                alert("파일 업로드 실패 (네트워크 또는 권한 문제)");
             }
         };
+
         reader.readAsDataURL(file);
-    } else {
-        await saveNotice("");
+
+    } 
+
+
+async function saveNotice(fileUrl, fileId = "", fileName = "") {
+    try {
+        const res = await fetch(NOTICE_API, {
+            method: "POST",
+            headers: { "Content-Type": "text/plain" },
+            body: JSON.stringify({
+                title: document.getElementById("noticeTitle").value,
+                content: document.getElementById("noticeContent").value,
+                writer: "구조대",
+                file: fileUrl,
+                fileId: fileId,
+                fileName: fileName
+            })
+        });
+
+        const result = await res.text();
+
+        if (result.trim() === "ok") {
+            document.getElementById("noticeTitle").value = "";
+            document.getElementById("noticeContent").value = "";
+            document.getElementById("noticeFile").value = "";
+
+            loadNotice();
+            alert("공지 등록 완료");
+        } else {
+            alert("저장 실패: " + result);
+        }
+
+    } catch (err) {
+        console.error(err);
+        alert("공지 저장 실패 (네트워크 오류)");
     }
 }
 
+    
 /* ===== 게시글 최종 스프레드시트 저장 기능 ===== */
 async function saveNotice(fileUrl, fileId="", fileName="") {
     try {
