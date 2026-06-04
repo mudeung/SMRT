@@ -353,6 +353,25 @@ async function writeNotice() {
     }
 }
 
+/* ===== Drive 업로드 함수 ===== */    
+function uploadToDrive(base64, fileName, mimeType) {
+  const blob = Utilities.newBlob(
+    Utilities.base64Decode(base64),
+    mimeType,
+    fileName
+  );
+
+  const file = DriveApp.createFile(blob);
+
+  // 공개 링크 설정 (중요)
+  file.setSharing(DriveApp.Access.ANYONE_WITH_LINK, DriveApp.Permission.VIEW);
+
+  return {
+    fileId: file.getId(),
+    url: file.getUrl(),
+    name: file.getName()
+  };
+}
     
 /* ===== 게시글 최종 스프레드시트 저장 기능 ===== */
 async function saveNotice(fileUrl, fileId = "", fileName = "") {
