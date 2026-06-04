@@ -84,45 +84,45 @@
     /**********************
      * 목록
      **********************/
-    async function loadPosts() {
-      const { data, error } = await client
-        .from("posts")
-        .select("*")
-        .order("created_at", { ascending: false });
+ async function loadPosts() {
+  const { data, error } = await client
+    .from("posts")
+    .select("*")
+    .order("created_at", { ascending: false });
 
-      if (error) {
-        console.error(error);
-        return;
-      }
+  if (error) {
+    console.error(error);
+    return;
+  }
 
-      const container = document.getElementById("posts");
-      container.innerHTML = "";
+  const container = document.getElementById("posts");
+  container.innerHTML = "";
 
-    data.forEach(post => {
-  const div = document.createElement("div");
-  div.className = "post";
+  data.forEach(post => {
+    const div = document.createElement("div");
+    div.className = "post";
 
-  const btn = document.createElement("button");
-  btn.innerText = "수정";
-  btn.onclick = () => editPost(post.id, post.title, post.content);
+    const btn = document.createElement("button");
+    btn.innerText = "수정";
+    btn.onclick = () => editPost(post.id, post.title, post.content);
 
-  const del = document.createElement("button");
-  del.innerText = "삭제";
-  del.onclick = () => deletePost(post.id);
+    const del = document.createElement("button");
+    del.innerText = "삭제";
+    del.onclick = () => deletePost(post.id);
 
-  div.innerHTML = `
-    <h4>${post.title}</h4>
-    <p>${post.content}</p>
-    ${post.file_url ? `<a href="${post.file_url}" target="_blank">파일 보기</a>` : ""}
-    <small>${post.created_at}</small>
-  `;
+    div.innerHTML = `
+      <h4>${post.title}</h4>
+      <p>${post.content}</p>
+      ${post.file_url ? `<a href="${post.file_url}" target="_blank">파일 보기</a>` : ""}
+      <small>${post.created_at}</small>
+    `;
 
-  div.appendChild(btn);
-  div.appendChild(del);
+    div.appendChild(btn);
+    div.appendChild(del);
 
-  container.appendChild(div);
-});
-
+    container.appendChild(div);
+  }); // ⭐ 이게 반드시 있어야 함
+}
     /**********************
      * 삭제
      **********************/
