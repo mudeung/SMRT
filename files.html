@@ -1,99 +1,90 @@
 <!DOCTYPE html>
 <html lang="ko">
 <head>
-  <meta charset="UTF-8" />
-  <title>Supabase 게시판</title>
-  <style>
-    body { font-family: Arial; max-width: 800px; margin: 40px auto; }
-    input, textarea { width: 100%; margin-bottom: 10px; padding: 8px; }
-    button { padding: 6px 10px; margin-right: 5px; cursor: pointer; }
-    .post { border: 1px solid #ddd; padding: 10px; margin-top: 10px; }
-  </style>
+<meta charset="UTF-8" />
+<title>Supabase 안정 게시판</title>
+<style>
+body { font-family: Arial; max-width: 800px; margin: 40px auto; }
+input, textarea { width: 100%; margin-bottom: 10px; padding: 8px; }
+button { padding: 6px 10px; margin-right: 5px; }
+.post { border: 1px solid #ddd; padding: 10px; margin-top: 10px; }
+</style>
 </head>
 
 <body>
 
-  <h2>자료공유</h2>
+<h2>게시판</h2>
 
-  <input id="title" placeholder="제목" />
-  <textarea id="content" placeholder="내용"></textarea>
-  <input type="file" id="file" />
-  <button onclick="createPost()">등록</button>
+<input id="title" placeholder="제목" />
+<textarea id="content" placeholder="내용"></textarea>
+<input type="file" id="file" />
+<button id="createBtn">등록</button>
 
-  <hr />
+<hr />
 
-  <h3>게시글 목록</h3>
-  <div id="posts"></div>
+<div id="posts"></div>
 
-  <!-- Supabase -->
-  <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
 
-  <script>
-    const SUPABASE_URL = "https://laghjfjpqpitxqjhkdlh.supabase.co";
+<script>
+const SUPABASE_URL = "https://laghjfjpqpitxqjhkdlh.supabase.co";
+const SUPABASE_ANON_KEY = "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImxhZ2hqZmpwcXBpdHhxamhrZGxoIiwicm9sZSI6ImFub24iLCJpYXQiOjE3ODA1NTE4NzgsImV4cCI6MjA5NjEyNzg3OH0.WKC02BiwrGDv7Ttp8NAtf73t0kDSgISpTtiMhWyeKJg";
 
-    const SUPABASE_ANON_KEY = "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImxhZ2hqZmpwcXBpdHhxamhrZGxoIiwicm9sZSI6ImFub24iLCJpYXQiOjE3ODA1NTE4NzgsImV4cCI6MjA5NjEyNzg3OH0.WKC02BiwrGDv7Ttp8NAtf73t0kDSgISpTtiMhWyeKJg";
+const client = supabase.createClient(SUPABASE_URL, SUPABASE_ANON_KEY);
 
-    const client = window.supabase.createClient(
-      SUPABASE_URL,
-      SUPABASE_ANON_KEY
-    );
+/* =========================
+   CREATE
+========================= */
+document.getElementById("createBtn").addEventListener("click", async () => {
+  const title = document.getElementById("title").value;
+  const content = document.getElementById("content").value;
+  const file = document.getElementById("file").files[0];
 
-    /**********************
-     * 등록
-     **********************/
-    async function createPost() {
-      const title = document.getElementById("title").value;
-      const content = document.getElementById("content").value;
-      const file = document.getElementById("file").files[0];
+  let fileUrl = null;
 
-      let fileUrl = null;
+  try {
+    if (file) {
+      const fileName = Date.now() + "_" + file.name;
 
-      if (file) {
-        const fileName = `${Date.now()}_${file.name}`;
+      const { error: uploadError } = await client
+        .storage
+        .from("uploads")
+        .upload(fileName, file);
 
-        const { error: uploadError } = await client
-          .storage
-          .from("uploads")
-          .upload(fileName, file);
+      if (uploadError) return alert(uploadError.message);
 
-        if (uploadError) {
-          alert("파일 업로드 실패: " + uploadError.message);
-          return;
-        }
+      const { data } = client
+        .storage
+        .from("uploads")
+        .getPublicUrl(fileName);
 
-        const { data } = client
-          .storage
-          .from("uploads")
-          .getPublicUrl(fileName);
-
-        fileUrl = data.publicUrl;
-      }
-
-      const { error } = await client
-        .from("posts")
-        .insert([{ title, content, file_url: fileUrl }]);
-
-      if (error) {
-        alert("등록 실패: " + error.message);
-        return;
-      }
-
-      loadPosts();
+      fileUrl = data.publicUrl;
     }
 
-    /**********************
-     * 목록
-     **********************/
- async function loadPosts() {
+    const { error } = await client
+      .from("posts")
+      .insert([{ title, content, file_url: fileUrl }]);
+
+    if (error) return alert(error.message);
+
+    loadPosts();
+
+  } catch (e) {
+    alert("에러 발생");
+    console.error(e);
+  }
+});
+
+/* =========================
+   READ
+========================= */
+async function loadPosts() {
   const { data, error } = await client
     .from("posts")
     .select("*")
     .order("created_at", { ascending: false });
 
-  if (error) {
-    console.error(error);
-    return;
-  }
+  if (error) return console.error(error);
 
   const container = document.getElementById("posts");
   container.innerHTML = "";
@@ -102,76 +93,63 @@
     const div = document.createElement("div");
     div.className = "post";
 
-    const btn = document.createElement("button");
-    btn.innerText = "수정";
-    btn.onclick = () => editPost(post.id, post.title, post.content);
+    const title = document.createElement("h4");
+    title.textContent = post.title;
 
-    const del = document.createElement("button");
-    del.innerText = "삭제";
-    del.onclick = () => deletePost(post.id);
+    const content = document.createElement("p");
+    content.textContent = post.content;
 
-    div.innerHTML = `
-      <h4>${post.title}</h4>
-      <p>${post.content}</p>
-      ${post.file_url ? `<a href="${post.file_url}" target="_blank">파일 보기</a>` : ""}
-      <small>${post.created_at}</small>
-    `;
+    const btnWrap = document.createElement("div");
 
-    div.appendChild(btn);
-    div.appendChild(del);
-
-    container.appendChild(div);
-  }); // ⭐ 이게 반드시 있어야 함
-}
-    /**********************
-     * 삭제
-     **********************/
-    async function deletePost(id) {
-      if (!confirm("삭제할까요?")) return;
-
-      const { error } = await client
-        .from("posts")
-        .delete()
-        .eq("id", id);
-
-      if (error) {
-        alert("삭제 실패: " + error.message);
-        return;
-      }
-
-      loadPosts();
-    }
-
-    /**********************
-     * 수정
-     **********************/
-    async function editPost(id, oldTitle, oldContent) {
-      const newTitle = prompt("제목 수정", oldTitle);
-      const newContent = prompt("내용 수정", oldContent);
+    const editBtn = document.createElement("button");
+    editBtn.textContent = "수정";
+    editBtn.onclick = async () => {
+      const newTitle = prompt("제목", post.title);
+      const newContent = prompt("내용", post.content);
 
       if (!newTitle || !newContent) return;
 
-      const { error } = await client
-        .from("posts")
-        .update({
-          title: newTitle,
-          content: newContent
-        })
-        .eq("id", id);
-
-      if (error) {
-        alert("수정 실패: " + error.message);
-        return;
-      }
+      await client.from("posts")
+        .update({ title: newTitle, content: newContent })
+        .eq("id", post.id);
 
       loadPosts();
+    };
+
+    const delBtn = document.createElement("button");
+    delBtn.textContent = "삭제";
+    delBtn.onclick = async () => {
+      if (!confirm("삭제?")) return;
+
+      await client.from("posts")
+        .delete()
+        .eq("id", post.id);
+
+      loadPosts();
+    };
+
+    btnWrap.appendChild(editBtn);
+    btnWrap.appendChild(delBtn);
+
+    div.appendChild(title);
+    div.appendChild(content);
+
+    if (post.file_url) {
+      const a = document.createElement("a");
+      a.href = post.file_url;
+      a.textContent = "파일 보기";
+      a.target = "_blank";
+      div.appendChild(a);
     }
 
-    /**********************
-     * 초기 실행
-     **********************/
-    loadPosts();
-  </script>
+    div.appendChild(btnWrap);
+
+    container.appendChild(div);
+  });
+}
+
+loadPosts();
+</script>
 
 </body>
 </html>
