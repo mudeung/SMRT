@@ -319,47 +319,29 @@ async function writeNotice() {
         return;
     }
 
-    // 파일이 있을 때
     if (file) {
         const reader = new FileReader();
-
-        reader.onload = async function () {
+        reader.onload = async function() {
             const base64 = reader.result.split(",")[1];
-
             try {
                 const response = await fetch(NOTICE_API, {
                     method: "POST",
                     headers: { "Content-Type": "text/plain" },
-                    body: JSON.stringify({
-                        mode: "upload",
-                        file: base64,
-                        name: file.name,
-                        type: file.type
-                    })
+                    body: JSON.stringify({ mode: "upload", file: base64, name: file.name, type: file.type })
                 });
-
                 const result = await response.json();
-
-                if (result.success) {
-                    await saveNotice(result.url, result.fileId, result.fileName);
-                } else {
-                    alert("파일 업로드 실패");
-                }
-
+                if (result.success) await saveNotice(result.url, result.fileId, result.fileName);
+                else alert("파일 업로드 실패");
             } catch (err) {
-                console.error("업로드 에러:", err);
+                console.error(err);
                 alert("파일 업로드 실패");
             }
         };
-
         reader.readAsDataURL(file);
-
     } else {
-        // 파일 없을 때
         await saveNotice("");
     }
 }
-
 // ================= 파일 있을 때 =================
     if (file) {
         const reader = new FileReader();
