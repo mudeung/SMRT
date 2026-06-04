@@ -135,12 +135,20 @@ async function loadPosts() {
     div.appendChild(content);
 
     if (post.file_url) {
-      const a = document.createElement("a");
-      a.href = post.file_url;
-      a.textContent = "파일 보기";
-      a.target = "_blank";
-      div.appendChild(a);
-    }
+  const downloadBtn = document.createElement("a");
+  downloadBtn.href = post.file_url;
+  downloadBtn.textContent = "⬇ 다운로드";
+  downloadBtn.target = "_blank";
+  downloadBtn.download = "";
+
+  downloadBtn.style.display = "inline-block";
+  downloadBtn.style.marginTop = "5px";
+  downloadBtn.style.padding = "5px 10px";
+  downloadBtn.style.border = "1px solid #ccc";
+  downloadBtn.style.textDecoration = "none";
+
+  div.appendChild(downloadBtn);
+}
 
     div.appendChild(btnWrap);
 
