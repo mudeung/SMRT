@@ -324,7 +324,7 @@ async function writeNotice() {
         reader.onload = async function () {
             const base64 = reader.result.split(",")[1];
             try {
-                const response = await fetch(NOTICE_API, {
+               const response = await fetch(NOTICE_API, {
   method: "POST",
   headers: { "Content-Type": "text/plain" },
   body: JSON.stringify({
@@ -334,6 +334,8 @@ async function writeNotice() {
     type: file.type
   })
 });
+
+const result = await response.json();
 
 const text = await response.text();
 console.log(text);
