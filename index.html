@@ -224,8 +224,18 @@ function initMap() {
 async function loadNotice() {
     try {
         const res = await fetch(NOTICE_API + "?t=" + Date.now());
-        const data = await res.json();
+        const text = await res.text();
+
+        let data;
+        try {
+            data = JSON.parse(text);
+        } catch (e) {
+            console.log("서버 응답(JSON 아님):", text);
+            return;
+        }
+
         renderNotice(data);
+
     } catch (err) {
         console.error("공지사항 로드 실패:", err);
     }
