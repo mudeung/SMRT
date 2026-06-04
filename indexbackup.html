@@ -72,9 +72,9 @@ tr:hover { background-color: #f1f3f5; cursor: pointer; }
 <a href="#contact">유관기관</a>
 </nav>
 
-<div id="noticePreview"></div>  
+<div id="noticePreview" style="padding: 20px 10% 0 10%;"></div>  
 
-<div class="today-box">
+<div class="today-box" style="margin: 20px 10% 0 10%;">
   <h3>📌 오늘 일정</h3>
   <div id="todaySchedule"></div>
 </div> 
@@ -120,7 +120,22 @@ tr:hover { background-color: #f1f3f5; cursor: pointer; }
     <p>구조대원 실시간 위치확인</p>
     <button onclick="window.open('https://mudeung.github.io/rescue/gpsgps.html','_blank')">바로가기</button>
 </div>
+
+<div class="card">
+    <h3>📁 공유자료</h3>
+    <p>공유자료</p>
+    <button onclick="window.open('https://drive.google.com/drive/folders/1sie1wSv_dGcZhO7aEieDjNj-yH4fKj_L','_blank')">파일 공유</button>
+</div>
+
+<div class="card">
+    <h3>📁 상황실 점검일지</h3>
+    <p>일일 점검일지 파일 업로드</p>
+    <button onclick="window.open('https://mudeung.github.io/SMRT/files.html','_blank')">파일 공유</button>
+</div>
+</section>    
+    
 </section>
+
 
 <section id="calendar">
 <h2 class="section-title">일정공유</h2>
@@ -139,7 +154,6 @@ src="https://calendar.google.com/calendar/embed?src=35f4e5ad17b2ce6c5ae379ff9dda
 <br><br>
 <textarea id="noticeContent" placeholder="내용" style="width:100%;height:120px;"></textarea>
 <br><br>
-<input type="file" id="noticeFile">
 <button onclick="writeNotice()">등록</button>
 </div>
 
@@ -185,7 +199,7 @@ src="https://calendar.google.com/calendar/embed?src=35f4e5ad17b2ce6c5ae379ff9dda
 
 <script>
 /* ================= API 설정 ================= */
-const NOTICE_API = "https://script.google.com/macros/s/AKfycbx0RIpxdlgEZVA3CBjVLT1SWhH7cYOLePudYd1n_o_x2D3HaaD-FXLQk-_5D-aooQG0/exec";
+const NOTICE_API = "https://script.google.com/macros/s/AKfycbxmWcN7CKCZqpTD27vrPFaqMCpkoR5tLCAFJPIaGghoXih1IDjI-lFSQvEEXdh3RIG3/exec";
 const RESCUE_API = "https://script.google.com/macros/s/AKfycbwUbacHm34YkWh--zL_e590P6h4S5wQo3iF8tCVZu71ZaTunTwdZ1TMLVqkyuHu-izW/exec";
 
 /* ===== 전역 변수 ===== */
@@ -224,8 +238,18 @@ function initMap() {
 async function loadNotice() {
     try {
         const res = await fetch(NOTICE_API + "?t=" + Date.now());
-        const data = await res.json();
+        const text = await res.text();
+
+        let data;
+        try {
+            data = JSON.parse(text);
+        } catch (e) {
+            console.log("서버 응답(JSON 아님):", text);
+            return;
+        }
+
         renderNotice(data);
+
     } catch (err) {
         console.error("공지사항 로드 실패:", err);
     }
@@ -249,9 +273,10 @@ function renderNotice(data) {
                 <h3>${data[i][1] || "제목 없음"}</h3>
                 <p style="white-space:pre-line">${data[i][2] || ""}</p>
                 <small>${data[i][3] || ""}</small><br>
-                ${data[i][4] ? `<a href="${data[i][4]}" target="_blank">첨부파일</a>` : ""}
-                <br><br>
-                <button onclick="deleteNotice('${data[i][0]}', this)" style="background:#c0392b;">삭제</button>
+                         <br><br>
+                <button onclick="deleteNotice('${data[i][0]}', this)" style="background:#c0392b;">
+                삭제
+                </button>
             </div>
         `;
 
@@ -271,83 +296,92 @@ function renderNotice(data) {
 }
     
 async function deleteNotice(id, btnElement) {
+
     if (!confirm("삭제하시겠습니까?")) return;
 
     try {
+
         const res = await fetch(NOTICE_API, {
             method: "POST",
-            mode: "cors",
-            headers: { "Content-Type": "text/plain" },
-            body: JSON.stringify({ mode: "delete", id: String(id) })
+            headers: {
+                "Content-Type": "text/plain"
+            },
+            body: JSON.stringify({
+                mode: "delete",
+                id: String(id)
+            })
         });
-        
+
         const result = await res.text();
 
-        if (result.trim() === "ok") { 
+        if (result.trim() === "ok") {
+
             btnElement.closest(".card").remove();
-            loadNotice(); 
-            alert("삭제되었습니다.");
+            loadNotice();
+
+            alert("공지 삭제 완료");
+
         } else {
-            alert("삭제 실패: " + result);
+            alert("삭제 실패 : " + result);
         }
-    } catch(err) {
-        console.error("상세 에러 로그:", err);
-        alert("통신 오류가 발생했습니다.");
+
+    } catch (err) {
+        console.error(err);
+        alert("통신 오류");
     }
 }
     
+/* ===== 업무공지 작성 및 파일 업로드 기능 ===== */
 async function writeNotice() {
-    const file = document.getElementById("noticeFile").files[0];
+
     const title = document.getElementById("noticeTitle").value.trim();
     const content = document.getElementById("noticeContent").value.trim();
 
-    if(!title || !content) {
+    if (!title || !content) {
         alert("제목과 내용을 모두 입력해주세요.");
         return;
     }
 
-    if (file) {
-        const reader = new FileReader();
-        reader.onload = async function () {
-            const base64 = reader.result.split(",")[1];
-            try {
-                const upload = await fetch(NOTICE_API, {
-                    method: "POST",
-                    body: JSON.stringify({ mode: "upload", file: base64, name: file.name, type: file.type })
-                });
-                const fileUrl = await upload.text();
-                await saveNotice(fileUrl);
-            } catch(err) {
-                alert("파일 업로드 실패");
-            }
-        };
-        reader.readAsDataURL(file);
-    } else {
-        await saveNotice("");
-    }
+    await saveNotice();
 }
-
-async function saveNotice(fileUrl) {
+    
+/* ===== 게시글 최종 스프레드시트 저장 기능 ===== */
+async function saveNotice() {
     try {
-        await fetch(NOTICE_API, {
+
+        const res = await fetch(NOTICE_API, {
             method: "POST",
+            headers: {
+                "Content-Type": "text/plain"
+            },
             body: JSON.stringify({
                 title: document.getElementById("noticeTitle").value,
                 content: document.getElementById("noticeContent").value,
-                writer: "구조대",
-                file: fileUrl
+                writer: "구조대"
             })
         });
 
-        document.getElementById("noticeTitle").value = "";
-        document.getElementById("noticeContent").value = "";
-        document.getElementById("noticeFile").value = "";
-        loadNotice();
-    } catch(err) {
-        alert("공지 저장 실패");
+        const result = await res.text();
+
+        if (result.trim() === "ok") {
+
+            document.getElementById("noticeTitle").value = "";
+            document.getElementById("noticeContent").value = "";
+
+            loadNotice();
+
+            alert("공지 등록 완료");
+
+        } else {
+            alert("저장 실패 : " + result);
+        }
+
+    } catch (err) {
+        console.error(err);
+        alert("저장 실패");
     }
 }
-
+    
 /* ===== RESCUE DATA (사고 현황) 기능 ===== */
 async function loadData() {
     if (sessionStorage.getItem("login") !== "ok") return;
@@ -364,7 +398,6 @@ async function loadData() {
 }
 
 function renderData(data) {
-    // ❌ 불필요한 글자 카드 생성을 막기 위해 내부 리스트 추가 로직을 삭제했습니다.
     document.getElementById("listArea").innerHTML = "";
     markers.forEach(m => m.setMap(null));
     markers = [];
@@ -396,8 +429,6 @@ function renderData(data) {
     });
 
     if (hasValidMarker && map) map.setBounds(bounds);
-
-    // 하단 정식 상황판 테이블 호출
     renderTable(data);
 }
 
