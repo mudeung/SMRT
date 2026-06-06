@@ -242,10 +242,10 @@ accidentCause.addEventListener("change", () => {
 /* 공유 텍스트 */
 function buildShareText(post) {
   return `
-[산악사고기록]
+[무등산]
 시간: ${new Date(post.created_at).toLocaleString()}
-유형: ${post.accident_type || "-"}
 위치: ${post.location || "-"}
+유형: ${post.accident_type || "-"}
 상태: ${post.patient_info?.condition || "-"}
 
 [요구조자]
