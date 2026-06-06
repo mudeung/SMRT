@@ -3,27 +3,54 @@
 <head>
 <meta charset="UTF-8" />
 <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
-<title>Supabase 게시판 + 시간</title>
+<title>출동기록 시스템</title>
 
 <style>
 body {
   font-family: Arial;
-  max-width: 600px;
-  margin: 0 auto;
-  padding: 12px;
+  margin: 0;
+  padding: 10px;
   background: #f7f7f7;
+  display: flex;
+  justify-content: center;
 }
 
-h2 { text-align: center; }
+/* ===== 레이아웃 ===== */
+.layout {
+  display: flex;
+  gap: 12px;
+  align-items: flex-start;
+}
 
-input, textarea {
-  width: 100%;
+.left {
+  flex: 4;
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+}
+
+.right {
+  flex: 6;
+}
+
+/* 카드 */
+.card {
+  background: white;
   padding: 12px;
-  margin-bottom: 10px;
-  border-radius: 10px;
-  border: 1px solid #ddd;
+  border-radius: 12px;
 }
 
+/* 입력 */
+input, textarea, select {
+  width: 100%;
+  padding: 10px;
+  margin-bottom: 8px;
+  border-radius: 8px;
+  border: 1px solid #ddd;
+  box-sizing: border-box;
+}
+
+/* 버튼 */
 button {
   padding: 10px;
   border: none;
@@ -31,51 +58,103 @@ button {
   background: #2d6cdf;
   color: white;
   cursor: pointer;
-  margin-right: 5px;
+  width: 100%;
+  margin-top: 5px;
 }
 
 .delete-btn {
-  background: #d9534f !important;
-  color: white;
+  background: #d9534f;
 }
 
+.edit-btn {
+  background: #10b981;
+}
+
+/* 게시글 */
 .post {
   background: white;
   padding: 12px;
-  margin-top: 12px;
+  margin-bottom: 10px;
   border-radius: 10px;
 }
 
+/* 텍스트 */
 .time {
   font-size: 12px;
   color: gray;
   margin-bottom: 6px;
 }
 
-.comment {
-  font-size: 13px;
-  background: #f1f1f1;
-  padding: 6px;
-  margin-top: 5px;
-  border-radius: 6px;
-  display: flex;
-  justify-content: space-between;
+/* 모바일 */
+@media (max-width: 768px) {
+  .layout {
+    flex-direction: column;
+  }
+
+  .left, .right {
+    width: 100%;
+    flex: unset;
+  }
 }
 </style>
 </head>
 
 <body>
 
-<h2>출동기록 게시판</h2>
+<div class="layout">
 
-<input id="title" placeholder="사고내용;장소;위치" />
-<textarea id="content" placeholder="이름;성별;주소;연락처;응급처치"></textarea>
-<input type="file" id="file" />
-<button id="createBtn">저장</button>
+  <!-- ================= LEFT INPUT ================= -->
+  <div class="left">
 
-<hr />
+    <div class="card">
+      <h3>🚑 출동 기록</h3>
 
-<div id="posts"></div>
+      <select id="accidentType">
+        <option value="">사고유형</option>
+        <option>실족·추락</option>
+        <option>낙석</option>
+        <option>미끄러짐</option>
+        <option>흉통</option>
+        <option>심정지</option>
+        <option>호흡곤란</option>
+      </select>
+
+      <input id="location" placeholder="사고 위치" />
+    </div>
+
+    <div class="card">
+      <h3>환자정보</h3>
+      <input id="patientName" placeholder="이름" />
+      <input id="birth" type="date" />
+      <input id="address" placeholder="거주지" />
+      <input id="phone" placeholder="연락처" />
+    </div>
+
+    <div class="card">
+      <h3>응급처치</h3>
+      <textarea id="treatment"></textarea>
+    </div>
+
+    <div class="card">
+      <h3>출동대원</h3>
+      <input id="rescueTeam" placeholder="대원 이름" />
+    </div>
+
+    <div class="card">
+      <h3>파일</h3>
+      <input type="file" id="file" />
+    </div>
+
+    <button id="createBtn">저장</button>
+
+  </div>
+
+  <!-- ================= RIGHT POSTS ================= -->
+  <div class="right">
+    <div id="posts"></div>
+  </div>
+
+</div>
 
 <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
 
@@ -83,15 +162,29 @@ button {
 const SUPABASE_URL = "https://rwabtimwveqewhbkvjna.supabase.co";
 const SUPABASE_ANON_KEY = "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InJ3YWJ0aW13dmVxZXdoYmt2am5hIiwicm9sZSI6ImFub24iLCJpYXQiOjE3ODA3MzAyNjEsImV4cCI6MjA5NjMwNjI2MX0.YbJ3pd_3KrttjMwBlRu8zDoLwulfOz-3AONCObkZ8U4";
 
+
 const client = supabase.createClient(SUPABASE_URL, SUPABASE_ANON_KEY);
 
 /* =========================
-   CREATE POST
+   CREATE (DB 분리 반영)
 ========================= */
 document.getElementById("createBtn").onclick = async () => {
-  const title = document.getElementById("title").value;
-  const content = document.getElementById("content").value;
+
+  const accidentType = document.getElementById("accidentType").value;
+  const location = document.getElementById("location").value;
+
+  const patientName = document.getElementById("patientName").value;
+  const birth = document.getElementById("birth").value;
+  const address = document.getElementById("address").value;
+  const phone = document.getElementById("phone").value;
+  const treatment = document.getElementById("treatment").value;
+  const rescueTeam = document.getElementById("rescueTeam").value;
   const file = document.getElementById("file").files[0];
+
+  if (!accidentType || !location) {
+    alert("사고유형과 위치는 필수");
+    return;
+  }
 
   let fileUrl = null;
 
@@ -111,8 +204,27 @@ document.getElementById("createBtn").onclick = async () => {
     fileUrl = data.publicUrl;
   }
 
+  const content = `
+[환자]
+이름: ${patientName}
+생년월일: ${birth}
+주소: ${address}
+연락처: ${phone}
+
+[응급처치]
+${treatment}
+
+[출동대원]
+${rescueTeam}
+  `;
+
   await client.from("posts").insert([
-    { title, content, file_url: fileUrl }
+    {
+      accident_type: accidentType,
+      location: location,
+      content,
+      file_url: fileUrl
+    }
   ]);
 
   loadPosts();
@@ -122,6 +234,7 @@ document.getElementById("createBtn").onclick = async () => {
    LOAD POSTS
 ========================= */
 async function loadPosts() {
+
   const { data: posts } = await client
     .from("posts")
     .select("*")
@@ -130,23 +243,35 @@ async function loadPosts() {
   const container = document.getElementById("posts");
   container.innerHTML = "";
 
+  if (!posts) return;
+
   for (const post of posts) {
+
     const div = document.createElement("div");
     div.className = "post";
 
+    const time = new Date(post.created_at).toLocaleString("ko-KR", {
+      year: "numeric",
+      month: "2-digit",
+      day: "2-digit",
+      hour: "2-digit",
+      minute: "2-digit"
+    });
+
     div.innerHTML = `
-      <h3>${post.title}</h3>
-      <div class="time">🕒 ${new Date(post.created_at).toLocaleString()}</div>
-      <p>${post.content}</p>
+      <h3>${post.accident_type}</h3>
+      <div class="time">📍 ${post.location}</div>
+      <div class="time">🕒 ${time}</div>
+      <pre style="white-space:pre-wrap;">${post.content}</pre>
       ${post.file_url ? `<a href="${post.file_url}" target="_blank">파일 다운로드</a>` : ""}
     `;
 
-    /* 삭제 버튼 */
-    const delPost = document.createElement("button");
-    delPost.textContent = "삭제";
-    delPost.className = "delete-btn";
+    /* 삭제 */
+    const del = document.createElement("button");
+    del.textContent = "삭제";
+    del.className = "delete-btn";
 
-    delPost.onclick = async () => {
+    del.onclick = async () => {
       if (!confirm("삭제?")) return;
 
       await client
@@ -157,66 +282,39 @@ async function loadPosts() {
       loadPosts();
     };
 
-    div.appendChild(delPost);
+    /* 수정 */
+    const edit = document.createElement("button");
+    edit.textContent = "수정";
+    edit.className = "edit-btn";
 
-    /* 댓글 입력 */
-    const input = document.createElement("input");
-    input.placeholder = "추가작성";
+    edit.onclick = async () => {
 
-    const btn = document.createElement("button");
-    btn.textContent = "추가";
+      const newType = prompt("사고유형 수정", post.accident_type);
+      if (newType === null) return;
 
-    const commentList = document.createElement("div");
+      const newLocation = prompt("위치 수정", post.location);
+      if (newLocation === null) return;
 
-    btn.onclick = async () => {
-      if (!input.value) return;
+      const newContent = prompt("내용 수정", post.content);
+      if (newContent === null) return;
 
-      await client.from("comments").insert([
-        {
-          post_id: post.id,
-          content: input.value
-        }
-      ]);
+      await client
+        .from("posts")
+        .update({
+          accident_type: newType,
+          location: newLocation,
+          content: newContent
+        })
+        .eq("id", post.id);
 
-      input.value = "";
       loadPosts();
     };
 
-    div.appendChild(input);
-    div.appendChild(btn);
-    div.appendChild(commentList);
+    div.appendChild(edit);
+    div.appendChild(del);
 
     container.appendChild(div);
-
-    loadComments(post.id, commentList);
   }
-}
-
-/* =========================
-   LOAD COMMENTS
-========================= */
-async function loadComments(postId, container) {
-  const { data } = await client
-    .from("comments")
-    .select("*")
-    .eq("post_id", postId)
-    .order("created_at", { ascending: true });
-
-  container.innerHTML = "";
-
-  data.forEach(c => {
-    const div = document.createElement("div");
-    div.className = "comment";
-
-    div.innerHTML = `
-      <span>${c.content}</span>
-      <small style="color:gray;">
-        ${new Date(c.created_at).toLocaleString()}
-      </small>
-    `;
-
-    container.appendChild(div);
-  });
 }
 
 loadPosts();
