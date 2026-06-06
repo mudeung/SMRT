@@ -109,8 +109,15 @@ button{
 
 .post h4{
   font-size:20px;
-  margin-bottom:10px;
+  margin-bottom:6px;
   color:#111827;
+}
+
+.post small{
+  display:block;
+  margin-bottom:10px;
+  color:#6b7280;
+  font-size:13px;
 }
 
 .post p{
@@ -296,7 +303,7 @@ document.getElementById("createBtn")
 });
 
 /* =========================
-   READ
+   READ (시간 표시 포함)
 ========================= */
 async function loadPosts(){
 
@@ -326,50 +333,47 @@ async function loadPosts(){
 
   data.forEach(post => {
 
-    const div =
-      document.createElement("div");
-
+    const div = document.createElement("div");
     div.className = "post";
+
+    const date = new Date(post.created_at);
+
+    const formatted = date.toLocaleString("ko-KR", {
+      year: "numeric",
+      month: "2-digit",
+      day: "2-digit",
+      hour: "2-digit",
+      minute: "2-digit"
+    });
 
     div.innerHTML = `
       <h4>${post.title}</h4>
+      <small>🕒 ${formatted}</small>
       <p>${post.content}</p>
     `;
 
     if(post.file_url){
-
-      const link =
-      document.createElement("a");
-
+      const link = document.createElement("a");
       link.href = post.file_url;
       link.target = "_blank";
       link.className = "file-link";
       link.textContent = "📎 첨부파일 다운로드";
-
       div.appendChild(link);
     }
 
-    const actions =
-      document.createElement("div");
-
+    const actions = document.createElement("div");
     actions.className = "actions";
 
-    const editBtn =
-      document.createElement("button");
-
+    const editBtn = document.createElement("button");
     editBtn.className = "edit-btn";
     editBtn.textContent = "수정";
 
     editBtn.onclick = async () => {
 
-      const newTitle =
-        prompt("제목 수정", post.title);
-
+      const newTitle = prompt("제목 수정", post.title);
       if(newTitle === null) return;
 
-      const newContent =
-        prompt("내용 수정", post.content);
-
+      const newContent = prompt("내용 수정", post.content);
       if(newContent === null) return;
 
       await client
@@ -383,16 +387,13 @@ async function loadPosts(){
       loadPosts();
     };
 
-    const deleteBtn =
-      document.createElement("button");
-
+    const deleteBtn = document.createElement("button");
     deleteBtn.className = "delete-btn";
     deleteBtn.textContent = "삭제";
 
     deleteBtn.onclick = async () => {
 
-      if(!confirm("삭제하시겠습니까?"))
-        return;
+      if(!confirm("삭제하시겠습니까?")) return;
 
       await client
         .from("posts")
