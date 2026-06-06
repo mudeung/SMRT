@@ -15,12 +15,7 @@ body {
   justify-content: center;
 }
 
-.layout {
-  display: flex;
-  gap: 12px;
-  align-items: flex-start;
-}
-
+.layout { display: flex; gap: 12px; align-items: flex-start; }
 .left { flex: 4; display: flex; flex-direction: column; gap: 12px; }
 .right { flex: 6; }
 
@@ -52,7 +47,6 @@ button {
 
 .delete-btn { background: #d9534f; }
 .edit-btn { background: #10b981; }
-.sms-btn { background: #f59e0b; }
 
 .post {
   background: white;
@@ -65,7 +59,6 @@ button {
 
 @media (max-width: 768px) {
   .layout { flex-direction: column; }
-  .left, .right { width: 100%; flex: unset; }
 }
 </style>
 </head>
@@ -96,7 +89,6 @@ button {
     </select>
 
     <input id="accidentLocation" placeholder="사고 위치" />
-    <input id="patientStatus" placeholder="환자 상태" />
   </div>
 
   <div class="card">
@@ -140,6 +132,7 @@ const SUPABASE_URL = "https://rwabtimwveqewhbkvjna.supabase.co";
 const SUPABASE_ANON_KEY = "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InJ3YWJ0aW13dmVxZXdoYmt2am5hIiwicm9sZSI6ImFub24iLCJpYXQiOjE3ODA3MzAyNjEsImV4cCI6MjA5NjMwNjI2MX0.YbJ3pd_3KrttjMwBlRu8zDoLwulfOz-3AONCObkZ8U4";
 
 
+
 const client = supabase.createClient(SUPABASE_URL, SUPABASE_ANON_KEY);
 
 /* ================= DOM ================= */
@@ -169,12 +162,9 @@ const accidentMap = {
   "동물": ["벌 쏘임", "뱀 물림", "야생동물 공격"]
 };
 
-/* ================= 사고 유형 필터 ================= */
 accidentCause.addEventListener("change", () => {
   const allowed = accidentMap[accidentCause.value] || [];
-
   accidentType.innerHTML = `<option value="">사고유형</option>`;
-
   allowed.forEach(v => {
     const opt = document.createElement("option");
     opt.value = v;
@@ -183,9 +173,9 @@ accidentCause.addEventListener("change", () => {
   });
 });
 
-/* ================= 문자 공유 ================= */
-function shareSMS(post) {
-  const text = `
+/* ================= 공유 텍스트 ================= */
+function buildShareText(post) {
+  return `
 [출동기록]
 유형: ${post.accident_type}
 위치: ${post.location}
@@ -194,25 +184,58 @@ function shareSMS(post) {
 [내용]
 ${post.content}
   `.trim();
-
-  const encoded = encodeURIComponent(text);
-  window.location.href = `sms:?body=${encoded}`;
 }
 
-/* ================= 폼 초기화 ================= */
-function resetForm() {
-  accidentCause.value = "";
-  accidentType.innerHTML = `<option value="">사고유형</option>`;
-  locationInput.value = "";
+/* ================= 네이티브 공유 ================= */
+async function shareNative(post) {
+  const text = buildShareText(post);
 
-  patientName.value = "";
-  birth.value = "";
-  address.value = "";
-  phone.value = "";
+  if (navigator.share) {
+    await navigator.share({
+      title: "출동기록",
+      text
+    });
+  } else {
+    alert("이 브라우저는 공유 기능을 지원하지 않습니다.");
+  }
+}
 
-  treatment.value = "";
-  rescueTeam.value = "";
-  fileInput.value = "";
+/* ================= 복사 ================= */
+async function copy(post) {
+  await navigator.clipboard.writeText(buildShareText(post));
+  alert("복사 완료");
+}
+
+/* ================= 수정 ================= */
+async function editPost(post) {
+  const newType = prompt("유형", post.accident_type);
+  const newLoc = prompt("위치", post.location);
+  const newContent = prompt("내용", post.content);
+
+  if (!newType || !newLoc) return;
+
+  await client
+    .from("posts")
+    .update({
+      accident_type: newType,
+      location: newLoc,
+      content: newContent
+    })
+    .eq("id", post.id);
+
+  loadPosts();
+}
+
+/* ================= 삭제 ================= */
+async function deletePost(post) {
+  if (!confirm("삭제하시겠습니까?")) return;
+
+  await client
+    .from("posts")
+    .delete()
+    .eq("id", post.id);
+
+  loadPosts();
 }
 
 /* ================= CREATE ================= */
@@ -224,11 +247,11 @@ document.getElementById("createBtn").onclick = async () => {
     if (file) {
       const fileName = `${Date.now()}_${file.name}`;
 
-      const { error: uploadError } = await client.storage
+      const { error } = await client.storage
         .from("uploads")
         .upload(fileName, file);
 
-      if (uploadError) throw uploadError;
+      if (error) throw error;
 
       const { data } = client.storage
         .from("uploads")
@@ -257,7 +280,6 @@ ${rescueTeam.value}
     };
 
     const { error } = await client.from("posts").insert([payload]);
-
     if (error) throw error;
 
     resetForm();
@@ -267,6 +289,20 @@ ${rescueTeam.value}
     alert(err.message);
   }
 };
+
+/* ================= RESET ================= */
+function resetForm() {
+  accidentCause.value = "";
+  accidentType.innerHTML = `<option value="">사고유형</option>`;
+  locationInput.value = "";
+  patientName.value = "";
+  birth.value = "";
+  address.value = "";
+  phone.value = "";
+  treatment.value = "";
+  rescueTeam.value = "";
+  fileInput.value = "";
+}
 
 /* ================= LOAD ================= */
 async function loadPosts() {
@@ -286,57 +322,30 @@ async function loadPosts() {
       <div class="time">📍 ${post.location || "-"}</div>
       <div class="time">🕒 ${new Date(post.created_at).toLocaleString()}</div>
       <pre style="white-space:pre-wrap;">${post.content || ""}</pre>
-      ${post.file_url ? `<a href="${post.file_url}" target="_blank">파일</a>` : ""}
     `;
 
-    /* 수정 */
-    const edit = document.createElement("button");
-    edit.textContent = "수정";
-    edit.className = "edit-btn";
+    const copyBtn = document.createElement("button");
+    copyBtn.textContent = "복사";
+    copyBtn.onclick = () => copy(post);
 
-    edit.onclick = async () => {
-      const newType = prompt("유형", post.accident_type);
-      const newLoc = prompt("위치", post.location);
-      const newContent = prompt("내용", post.content);
+    const shareBtn = document.createElement("button");
+    shareBtn.textContent = "공유";
+    shareBtn.onclick = () => shareNative(post);
 
-      if (!newType || !newLoc) return;
+    const editBtn = document.createElement("button");
+    editBtn.textContent = "수정";
+    editBtn.className = "edit-btn";
+    editBtn.onclick = () => editPost(post);
 
-      await client.from("posts")
-        .update({
-          accident_type: newType,
-          location: newLoc,
-          content: newContent
-        })
-        .eq("id", post.id);
+    const delBtn = document.createElement("button");
+    delBtn.textContent = "삭제";
+    delBtn.className = "delete-btn";
+    delBtn.onclick = () => deletePost(post);
 
-      loadPosts();
-    };
-
-    /* 삭제 */
-    const del = document.createElement("button");
-    del.textContent = "삭제";
-    del.className = "delete-btn";
-
-    del.onclick = async () => {
-      if (!confirm("삭제?")) return;
-
-      await client.from("posts")
-        .delete()
-        .eq("id", post.id);
-
-      loadPosts();
-    };
-
-    /* 문자 */
-    const sms = document.createElement("button");
-    sms.textContent = "공유";
-    sms.className = "sms-btn";
-
-    sms.onclick = () => shareSMS(post);
-
-    div.appendChild(edit);
-    div.appendChild(del);
-    div.appendChild(sms);
+    div.appendChild(copyBtn);
+    div.appendChild(shareBtn);
+    div.appendChild(editBtn);
+    div.appendChild(delBtn);
 
     postsContainer.appendChild(div);
   });
