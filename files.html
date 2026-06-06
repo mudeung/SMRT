@@ -333,10 +333,10 @@ document.getElementById("createBtn").onclick = async () => {
       fileUrl = data.publicUrl;
     }
 
-  const payload = {
-  accident_type: accidentType.value,
-  location: locationInput.value,
-  content: `
+    const payload = {
+      accident_type: accidentType.value,
+      location: locationInput.value,
+      content: `
 [인적사항]
 이름: ${patientName.value}
 생년월일: ${birth.value}
@@ -348,20 +348,31 @@ ${treatment.value}
 
 [출동대원]
 ${rescueTeam.value}
-  `.trim(),
+      `.trim(),
 
-  file_url: fileUrl,
+      file_url: fileUrl,
 
-  patient_info: {
-    name: patientName.value,
-    birth: birth.value,
-    address: address.value,
-    phone: phone.value,
-    condition: patientCondition.value
-  },
+      patient_info: {
+        name: patientName.value,
+        birth: birth.value,
+        address: address.value,
+        phone: phone.value,
+        condition: patientCondition.value
+      },
 
-  treatment: treatment.value,
-  rescue_team: rescueTeam.value
+      treatment: treatment.value,
+      rescue_team: rescueTeam.value
+    };
+
+    const { error } = await client.from("posts").insert([payload]);
+    if (error) throw error;
+
+    resetForm();
+    loadPosts();
+
+  } catch (err) {
+    alert(err.message);
+  }
 };
 
 /* reset */
