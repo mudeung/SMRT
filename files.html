@@ -306,24 +306,47 @@ function resetForm() {
 
 /* ================= LOAD ================= */
 async function loadPosts() {
-  const { data } = await client
+  const { data, error } = await client
     .from("posts")
-    .select("*")
+    .select("id, accident_type, location, content, created_at")
     .order("created_at", { ascending: false });
 
+  if (error) {
+    console.error(error);
+    alert("데이터 불러오기 실패");
+    return;
+  }
+
+  if (!data) return;
+
   postsContainer.innerHTML = "";
+
+  const fragment = document.createDocumentFragment();
 
   data.forEach(post => {
     const div = document.createElement("div");
     div.className = "post";
 
-    div.innerHTML = `
-      <h3>${post.accident_type || "-"}</h3>
-      <div class="time">📍 ${post.location || "-"}</div>
-      <div class="time">🕒 ${new Date(post.created_at).toLocaleString()}</div>
-      <pre style="white-space:pre-wrap;">${post.content || ""}</pre>
-    `;
+    // 제목
+    const title = document.createElement("h3");
+    title.textContent = post.accident_type || "-";
 
+    // 위치
+    const loc = document.createElement("div");
+    loc.className = "time";
+    loc.textContent = `📍 ${post.location || "-"}`;
+
+    // 시간
+    const time = document.createElement("div");
+    time.className = "time";
+    time.textContent = `🕒 ${new Date(post.created_at).toLocaleString()}`;
+
+    // 내용
+    const content = document.createElement("pre");
+    content.style.whiteSpace = "pre-wrap";
+    content.textContent = post.content || "";
+
+    // 버튼들
     const copyBtn = document.createElement("button");
     copyBtn.textContent = "복사";
     copyBtn.onclick = () => copy(post);
@@ -342,16 +365,22 @@ async function loadPosts() {
     delBtn.className = "delete-btn";
     delBtn.onclick = () => deletePost(post);
 
+    // 조립
+    div.appendChild(title);
+    div.appendChild(loc);
+    div.appendChild(time);
+    div.appendChild(content);
+
     div.appendChild(copyBtn);
     div.appendChild(shareBtn);
     div.appendChild(editBtn);
     div.appendChild(delBtn);
 
-    postsContainer.appendChild(div);
+    fragment.appendChild(div);
   });
-}
 
-loadPosts();
+  postsContainer.appendChild(fragment);
+}
 </script>
 
 </body>
