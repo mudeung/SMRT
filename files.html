@@ -313,26 +313,27 @@ async function deletePost(post) {
 /* 생성 */
 document.getElementById("createBtn").onclick = async () => {
   try {
-
     const file = fileInput.files[0];
     let fileUrl = null;
 
+    // 파일 업로드
     if (file) {
       const fileName = `${Date.now()}_${file.name}`;
 
-      const { error } = await client.storage
+      const { error: uploadError } = await client.storage
         .from("uploads")
         .upload(fileName, file);
 
-      if (error) throw error;
+      if (uploadError) throw uploadError;
 
-      const { data } = client.storage
+      const { data: urlData } = client.storage
         .from("uploads")
         .getPublicUrl(fileName);
 
-      fileUrl = data.publicUrl;
+      fileUrl = urlData.publicUrl;
     }
 
+    // 게시물 payload
     const payload = {
       accident_type: accidentType.value,
       location: locationInput.value,
@@ -364,11 +365,12 @@ ${rescueTeam.value}
       rescue_team: rescueTeam.value
     };
 
-    const { error } = await client.from("posts").insert([payload]);
-    if (error) throw error;
+    // DB에 삽입
+    const { error: insertError } = await client.from("posts").insert([payload]);
+    if (insertError) throw insertError;
 
-    resetForm();
-    loadPosts();
+    resetForm();   // 폼 초기화
+    loadPosts();   // 새로고침
 
   } catch (err) {
     alert(err.message);
