@@ -245,8 +245,8 @@ function buildShareText(post) {
 [무등산]
 시간: ${new Date(post.created_at).toLocaleString()}
 위치: ${post.location || "-"}
-유형: ${post.accident_type || "-"}
-상태: ${post.patient_info?.condition || "-"}
+사고유형: ${post.accident_type || "-"}
+환자상태: ${post.patient_info?.condition || "-"}
 
 [요구조자]
 ${post.content || ""}
@@ -341,7 +341,7 @@ document.getElementById("createBtn").onclick = async () => {
 [인적사항]
 이름: ${patientName.value}
 생년월일: ${birth.value}
-주소: ${address.value}
+거주지: ${address.value}
 연락처: ${phone.value}
 
 [응급처치]
