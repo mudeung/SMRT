@@ -133,7 +133,7 @@ button {
 
 <div class="layout">
 
-<!-- ================= LEFT ================= -->
+<!-- LEFT -->
 <div class="left">
 
   <div class="card">
@@ -155,8 +155,7 @@ button {
     </select>
 
     <input id="accidentLocation" placeholder="사고 위치" />
-    <input id="patientCondition" placeholder="환자 상태 (예: 골절, 의식저하, 심정지)" />
-  
+    <input id="patientCondition" placeholder="환자 상태" />
   </div>
 
   <div class="card">
@@ -186,7 +185,7 @@ button {
 
 </div>
 
-<!-- ================= RIGHT ================= -->
+<!-- RIGHT -->
 <div class="right">
   <div id="posts"></div>
 </div>
@@ -199,11 +198,9 @@ button {
 const SUPABASE_URL = "https://rwabtimwveqewhbkvjna.supabase.co";
 const SUPABASE_ANON_KEY = "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InJ3YWJ0aW13dmVxZXdoYmt2am5hIiwicm9sZSI6ImFub24iLCJpYXQiOjE3ODA3MzAyNjEsImV4cCI6MjA5NjMwNjI2MX0.YbJ3pd_3KrttjMwBlRu8zDoLwulfOz-3AONCObkZ8U4";
 
-
-
 const client = supabase.createClient(SUPABASE_URL, SUPABASE_ANON_KEY);
 
-/* ================= DOM ================= */
+/* DOM */
 const accidentCause = document.getElementById("accidentCause");
 const accidentType = document.getElementById("accidentType");
 const locationInput = document.getElementById("accidentLocation");
@@ -225,9 +222,9 @@ const accidentMap = {
   "실족": ["실족·추락", "미끄러짐", "절단·열상", "의식저하", "심정지"],
   "미끄러짐": ["미끄러짐", "실족·추락", "절단·열상"],
   "낙석": ["낙석", "의식저하", "심정지"],
-  "길잃음": ["길 잃음", "체력 고갈", "저체온증", "탈수", "의식저하"],
+  "길잃음": ["길 잃음", "체력 저하", "저체온증", "탈수", "의식저하"],
   "체력고갈": ["체력 고갈", "의식저하", "저혈당"],
-  "장비문제": ["절단·열상", "실족·추락", "체력 고갈"],
+  "장비문제": ["골절·열상", "실족·추락", "체력 고갈"],
   "동물": ["벌 쏘임", "뱀 물림", "야생동물 공격"]
 };
 
@@ -242,52 +239,59 @@ accidentCause.addEventListener("change", () => {
   });
 });
 
-/* ================= 공유 텍스트 ================= */
+/* 공유 텍스트 */
 function buildShareText(post) {
   return `
 [산악사고기록]
 시간: ${new Date(post.created_at).toLocaleString()}
-위치: ${post.location}
-유형: ${post.accident_type}
+유형: ${post.accident_type || "-"}
+위치: ${post.location || "-"}
+상태: ${post.patient_condition || "-"}
 
 [요구조자]
-${post.content}
+${post.content || ""}
   `.trim();
 }
 
-/* ================= 네이티브 공유 ================= */
+/* 공유 */
 async function shareNative(post) {
   const text = buildShareText(post);
 
-  if (navigator.share) {
-    await navigator.share({
-      title: "무등산",
-      text
-    });
-  } else {
-    alert("이 브라우저는 공유 기능을 지원하지 않습니다.");
+  try {
+    if (navigator.share) {
+      await navigator.share({
+        title: `산악사고 - ${post.accident_type}`,
+        text
+      });
+    } else {
+      await navigator.clipboard.writeText(text);
+      alert("복사 완료");
+    }
+  } catch (e) {
+    console.error(e);
   }
 }
 
-/* ================= 복사 ================= */
+/* 복사 */
 async function copy(post) {
   await navigator.clipboard.writeText(buildShareText(post));
   alert("복사 완료");
 }
 
-/* ================= 수정 ================= */
+/* 수정 */
 async function editPost(post) {
   const newType = prompt("유형", post.accident_type);
   const newLoc = prompt("위치", post.location);
+  const newCondition = prompt("환자 상태", post.patient_condition);
   const newContent = prompt("내용", post.content);
 
   if (!newType || !newLoc) return;
 
-  await client
-    .from("posts")
+  await client.from("posts")
     .update({
       accident_type: newType,
       location: newLoc,
+      patient_condition: newCondition,
       content: newContent
     })
     .eq("id", post.id);
@@ -295,26 +299,20 @@ async function editPost(post) {
   loadPosts();
 }
 
-/* ================= 삭제 ================= */
+/* 삭제 */
 async function deletePost(post) {
-  if (!confirm("삭제하시겠습니까?")) return;
+  if (!confirm("삭제?")) return;
 
-  await client
-    .from("posts")
+  await client.from("posts")
     .delete()
     .eq("id", post.id);
 
   loadPosts();
 }
 
-/* ================= CREATE ================= */
+/* 생성 */
 document.getElementById("createBtn").onclick = async () => {
   try {
-
-    if (!accidentType.value) {
-      alert("사고유형을 선택하세요.");
-      return;
-    }
 
     const file = fileInput.files[0];
     let fileUrl = null;
@@ -335,25 +333,25 @@ document.getElementById("createBtn").onclick = async () => {
       fileUrl = data.publicUrl;
     }
 
-const payload = {
-  accident_type: accidentType.value,
-  location: locationInput.value,
-  content: `
+    const payload = {
+      accident_type: accidentType.value,
+      location: locationInput.value,
+      patient_condition: patientCondition.value,
+      content: `
 [인적사항]
 이름: ${patientName.value}
 생년월일: ${birth.value}
 주소: ${address.value}
 연락처: ${phone.value}
-상태: ${patientCondition.value}
 
 [응급처치]
 ${treatment.value}
 
 [출동대원]
 ${rescueTeam.value}
-  `.trim(),
-  file_url: fileUrl
-};
+      `.trim(),
+      file_url: fileUrl
+    };
 
     const { error } = await client.from("posts").insert([payload]);
     if (error) throw error;
@@ -366,7 +364,7 @@ ${rescueTeam.value}
   }
 };
 
-/* ================= RESET ================= */
+/* reset */
 function resetForm() {
   accidentCause.value = "";
   accidentType.innerHTML = `<option value="">사고유형</option>`;
@@ -381,12 +379,17 @@ function resetForm() {
   fileInput.value = "";
 }
 
-/* ================= LOAD ================= */
+/* load */
 async function loadPosts() {
-  const { data } = await client
+  const { data, error } = await client
     .from("posts")
     .select("*")
     .order("created_at", { ascending: false });
+
+  if (error) {
+    console.error(error);
+    return;
+  }
 
   postsContainer.innerHTML = "";
 
@@ -394,20 +397,12 @@ async function loadPosts() {
     const div = document.createElement("div");
     div.className = "post";
 
-div.innerHTML = `
-  <h3>${post.accident_type || "-"}</h3>
-  <div class="time">📍 ${post.location || "-"}</div>
-  <div class="time">🕒 ${new Date(post.created_at).toLocaleString()}</div>
-  <pre style="white-space:pre-wrap;">${post.content || ""}</pre>
-
-  ${post.file_url ? `
-    <p>
-      <a href="${post.file_url}" target="_blank">
-        📎 첨부파일 보기
-      </a>
-    </p>
-  ` : ""}
-`;
+    div.innerHTML = `
+      <h3>${post.accident_type || "-"}</h3>
+      <div class="time">📍 ${post.location || "-"}</div>
+      <div class="time">🕒 ${new Date(post.created_at).toLocaleString()}</div>
+      <pre style="white-space:pre-wrap;">${post.content || ""}</pre>
+    `;
 
     const copyBtn = document.createElement("button");
     copyBtn.textContent = "복사";
@@ -427,11 +422,7 @@ div.innerHTML = `
     delBtn.className = "delete-btn";
     delBtn.onclick = () => deletePost(post);
 
-    div.appendChild(copyBtn);
-    div.appendChild(shareBtn);
-    div.appendChild(editBtn);
-    div.appendChild(delBtn);
-
+    div.append(copyBtn, shareBtn, editBtn, delBtn);
     postsContainer.appendChild(div);
   });
 }
