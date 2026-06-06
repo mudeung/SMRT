@@ -107,17 +107,60 @@ button {
   <div class="left">
 
     <div class="card">
-      <h3>🚑 출동 기록</h3>
+      <h3>🚑 산악사고 출동기록</h3>
 
       <select id="accidentType">
         <option value="">사고유형</option>
-        <option>실족·추락</option>
-        <option>낙석</option>
-        <option>미끄러짐</option>
-        <option>흉통</option>
-        <option>심정지</option>
-        <option>호흡곤란</option>
-      </select>
+       <select id="accidentType">
+  <option value="">사고유형</option>
+
+  <!-- 질환 (Medical) -->
+  <optgroup label="질환 (Medical)">
+    <option value="심정지">심정지</option>
+    <option value="흉통">흉통</option>
+    <option value="호흡곤란">호흡곤란</option>
+    <option value="뇌졸중 의심">뇌졸중 의심</option>
+    <option value="경련">경련</option>
+    <option value="의식저하">의식저하</option>
+    <option value="저혈당">저혈당</option>
+    <option value="고혈당">고혈당</option>
+  </optgroup>
+
+  <!-- 외상 (Trauma) -->
+  <optgroup label="외상 (Trauma)">
+    <option value="실족·추락">실족·추락</option>
+    <option value="낙석">낙석</option>
+    <option value="미끄러짐">미끄러짐</option>
+    <option value="충돌(나무, 바위 등)">충돌(나무, 바위 등)</option>
+    <option value="절단·열상">절단·열상</option>
+    <option value="등산스틱/장비 손상">등산스틱/장비 손상</option>
+  </optgroup>
+
+  <!-- 환경 (Environmental) -->
+  <optgroup label="환경 (Environmental)">
+    <option value="저체온증">저체온증</option>
+    <option value="열탈진">열탈진</option>
+    <option value="열사병">열사병</option>
+    <option value="탈수">탈수</option>
+    <option value="동상">동상</option>
+    <option value="번개 손상">번개 손상</option>
+  </optgroup>
+
+  <!-- 조난 -->
+  <optgroup label="조난·고립 (Stranded)">
+    <option value="길 잃음">길 잃음</option>
+    <option value="야간 고립">야간 고립</option>
+    <option value="체력 고갈">체력 고갈</option>
+    <option value="장비 부족">장비 부족</option>
+  </optgroup>
+
+  <!-- 동물 -->
+  <optgroup label="동물·곤충">
+    <option value="벌 쏘임">벌 쏘임</option>
+    <option value="뱀 물림">뱀 물림</option>
+    <option value="야생동물 공격">야생동물 공격</option>
+  </optgroup>
+</select>
 
       <input id="location" placeholder="사고 위치" />
     </div>
