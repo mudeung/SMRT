@@ -3,127 +3,63 @@
 <head>
 <meta charset="UTF-8" />
 <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
-<title>Supabase 안정 게시판</title>
+<title>Supabase 게시판 + 시간</title>
 
 <style>
 body {
-  font-family: Arial, sans-serif;
-  width: 100%;
+  font-family: Arial;
   max-width: 600px;
   margin: 0 auto;
   padding: 12px;
   background: #f7f7f7;
 }
 
-h2 {
-  text-align: center;
-  margin-bottom: 20px;
-}
+h2 { text-align: center; }
 
 input, textarea {
   width: 100%;
-  padding: 14px;
-  margin-bottom: 12px;
-  font-size: 16px;
-  border: 1px solid #ddd;
+  padding: 12px;
+  margin-bottom: 10px;
   border-radius: 10px;
-  box-sizing: border-box;
-}
-
-textarea {
-  min-height: 100px;
-  resize: none;
+  border: 1px solid #ddd;
 }
 
 button {
-  width: 100%;
-  padding: 14px;
-  font-size: 16px;
+  padding: 10px;
   border: none;
-  border-radius: 10px;
+  border-radius: 8px;
   background: #2d6cdf;
   color: white;
-  margin-bottom: 10px;
+  cursor: pointer;
+  margin-right: 5px;
 }
 
-button:active {
-  transform: scale(0.98);
+.delete-btn {
+  background: #d9534f !important;
+  color: white;
 }
 
 .post {
   background: white;
-  border-radius: 12px;
-  padding: 14px;
+  padding: 12px;
   margin-top: 12px;
-  box-shadow: 0 2px 8px rgba(0,0,0,0.05);
+  border-radius: 10px;
 }
 
-.post h4 {
-  margin: 0 0 8px;
+.time {
+  font-size: 12px;
+  color: gray;
+  margin-bottom: 6px;
 }
 
-.post p {
-  margin: 0 0 10px;
-  white-space: pre-wrap;
-  font-size: 14px;
-  line-height: 1.4;
-}
-
-.post div {
-  display: flex;
-  gap: 6px;
-  flex-wrap: wrap;
-}
-
-.post button {
-  width: auto;
-  padding: 8px 10px;
-  font-size: 14px;
-  background: #555;
-  margin-right: 6px;
-}
-
-.post button:last-child {
-  background: #d9534f;
-}
-
-.post a {
-  display: inline-block;
-  margin-top: 8px;
-  font-size: 14px;
-  padding: 5px 10px;
-  border: 1px solid #ccc;
-  text-decoration: none;
+.comment {
+  font-size: 13px;
+  background: #f1f1f1;
+  padding: 6px;
+  margin-top: 5px;
   border-radius: 6px;
-}
-
-/* 📱 모바일 최적화 */
-@media (max-width: 480px) {
-  body {
-    padding: 10px;
-  }
-
-  h2 {
-    font-size: 20px;
-  }
-
-  input, textarea {
-    font-size: 15px;
-    padding: 12px;
-  }
-
-  button {
-    font-size: 15px;
-    padding: 12px;
-  }
-
-  .post {
-    padding: 12px;
-  }
-
-  .post button {
-    width: 48%;
-  }
+  display: flex;
+  justify-content: space-between;
 }
 </style>
 </head>
@@ -133,7 +69,7 @@ button:active {
 <h2>출동기록 게시판</h2>
 
 <input id="title" placeholder="산악사고 위치작성" />
-<textarea id="content" placeholder="이름;성별;주소;연락처;응급처치 내용"></textarea>
+<textarea id="content" placeholder="내용"></textarea>
 <input type="file" id="file" />
 <button id="createBtn">저장</button>
 
@@ -146,7 +82,6 @@ button:active {
 <script>
 const SUPABASE_URL = "https://rwabtimwveqewhbkvjna.supabase.co";
 const SUPABASE_ANON_KEY = "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InJ3YWJ0aW13dmVxZXdoYmt2am5hIiwicm9sZSI6ImFub24iLCJpYXQiOjE3ODA3MzAyNjEsImV4cCI6MjA5NjMwNjI2MX0.YbJ3pd_3KrttjMwBlRu8zDoLwulfOz-3AONCObkZ8U4";
-
 
 const client = supabase.createClient(SUPABASE_URL, SUPABASE_ANON_KEY);
 
@@ -163,11 +98,11 @@ document.getElementById("createBtn").onclick = async () => {
   if (file) {
     const fileName = Date.now() + "_" + file.name;
 
-    const { error: uploadError } = await client.storage
+    const { error } = await client.storage
       .from("uploads")
       .upload(fileName, file);
 
-    if (uploadError) return alert(uploadError.message);
+    if (error) return alert(error.message);
 
     const { data } = client.storage
       .from("uploads")
@@ -201,21 +136,37 @@ async function loadPosts() {
 
     div.innerHTML = `
       <h3>${post.title}</h3>
+      <div class="time">🕒 ${new Date(post.created_at).toLocaleString()}</div>
       <p>${post.content}</p>
       ${post.file_url ? `<a href="${post.file_url}" target="_blank">파일 다운로드</a>` : ""}
     `;
 
-    // 댓글 영역
-    const commentBox = document.createElement("div");
-    commentBox.className = "comment-box";
+    /* 삭제 버튼 */
+    const delPost = document.createElement("button");
+    delPost.textContent = "삭제";
+    delPost.className = "delete-btn";
 
+    delPost.onclick = async () => {
+      if (!confirm("삭제?")) return;
+
+      await client
+        .from("posts")
+        .delete()
+        .eq("id", post.id);
+
+      loadPosts();
+    };
+
+    div.appendChild(delPost);
+
+    /* 댓글 입력 */
     const input = document.createElement("input");
-    input.placeholder = "추가 작성";
+    input.placeholder = "추가작성";
 
     const btn = document.createElement("button");
     btn.textContent = "추가";
 
-    const list = document.createElement("div");
+    const commentList = document.createElement("div");
 
     btn.onclick = async () => {
       if (!input.value) return;
@@ -231,16 +182,13 @@ async function loadPosts() {
       loadPosts();
     };
 
-    commentBox.appendChild(input);
-    commentBox.appendChild(btn);
-    commentBox.appendChild(list);
-
-    div.appendChild(commentBox);
+    div.appendChild(input);
+    div.appendChild(btn);
+    div.appendChild(commentList);
 
     container.appendChild(div);
 
-    // 댓글 로드
-    loadComments(post.id, list);
+    loadComments(post.id, commentList);
   }
 }
 
@@ -259,7 +207,14 @@ async function loadComments(postId, container) {
   data.forEach(c => {
     const div = document.createElement("div");
     div.className = "comment";
-    div.textContent = c.content;
+
+    div.innerHTML = `
+      <span>${c.content}</span>
+      <small style="color:gray;">
+        ${new Date(c.created_at).toLocaleString()}
+      </small>
+    `;
+
     container.appendChild(div);
   });
 }
