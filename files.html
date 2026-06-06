@@ -238,55 +238,82 @@ async function deletePost(post) {
   loadPosts();
 }
 
-/* ================= CREATE ================= */
+/* ================= CREATE (SAFE VERSION) ================= */
 document.getElementById("createBtn").onclick = async () => {
   try {
     const file = fileInput.files[0];
     let fileUrl = null;
 
+    // 1. 파일 업로드 처리
     if (file) {
-      const fileName = `${Date.now()}_${file.name}`;
 
-      const { error } = await client.storage
+      // ✔ 파일 타입 제한 (중요)
+      const allowedTypes = ["image/", "application/pdf"];
+
+      if (!allowedTypes.some(type => file.type.startsWith(type))) {
+        alert("이미지 또는 PDF만 업로드 가능합니다.");
+        return;
+      }
+
+      // ✔ 파일명 안전하게 정리
+      const safeFileName = `${Date.now()}_${file.name.replace(/[^a-zA-Z0-9.]/g, "_")}`;
+
+      // ✔ 업로드
+      const { error: uploadError } = await client.storage
         .from("uploads")
-        .upload(fileName, file);
+        .upload(safeFileName, file);
 
-      if (error) throw error;
+      if (uploadError) throw uploadError;
 
+      // ✔ 공개 URL 생성
       const { data } = client.storage
         .from("uploads")
-        .getPublicUrl(fileName);
+        .getPublicUrl(safeFileName);
 
       fileUrl = data.publicUrl;
     }
 
+    // 2. 입력 검증 (최소 필수 체크)
+    if (!accidentType.value || !locationInput.value) {
+      alert("사고 유형과 위치는 필수입니다.");
+      return;
+    }
+
+    // 3. payload 생성
     const payload = {
       accident_type: accidentType.value,
       location: locationInput.value,
       content: `
 [환자]
-이름: ${patientName.value}
-생년월일: ${birth.value}
-주소: ${address.value}
-연락처: ${phone.value}
+이름: ${patientName.value || "-"}
+생년월일: ${birth.value || "-"}
+주소: ${address.value || "-"}
+연락처: ${phone.value || "-"}
 
 [응급처치]
-${treatment.value}
+${treatment.value || "-"}
 
 [출동대원]
-${rescueTeam.value}
+${rescueTeam.value || "-"}
       `.trim(),
       file_url: fileUrl
     };
 
-    const { error } = await client.from("posts").insert([payload]);
+    // 4. DB 저장
+    const { error } = await client
+      .from("posts")
+      .insert([payload]);
+
     if (error) throw error;
 
+    // 5. 성공 후 처리
+    alert("저장 완료");
     resetForm();
     loadPosts();
 
   } catch (err) {
-    alert(err.message);
+    console.error(err);
+    alert(err.message || "저장 실패");
   }
 };
 
