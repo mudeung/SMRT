@@ -141,12 +141,12 @@ button {
 
     <select id="accidentCause">
       <option value="">사고원인</option>
-      <option value="실족">실족·추락</option>
+      <option value="추락">추락</option>
       <option value="미끄러짐">미끄러짐</option>
+      <option value="낙석">낙석</option>
       <option value="길잃음">길 잃음</option>
       <option value="체력저하">체력 저하</option>
       <option value="장비문제">장비 부족/손상</option>
-      <option value="낙석">낙석</option>
       <option value="동물">동물/곤충</option>
     </select>
 
@@ -219,12 +219,12 @@ const postsContainer = document.getElementById("posts");
 
 /* ================= 사고 매핑 ================= */
 const accidentMap = {
-  "실족": ["실족·추락", "미끄러짐", "골절·열상", "의식저하", "심정지"],
-  "미끄러짐": ["미끄러짐", "실족·추락", "골절·열상"],
+  "추락": ["추락", "골절", "열상", "의식저하", "심정지"],
+  "미끄러짐": ["미끄러짐", "실족", "골절", "열상"],
   "낙석": ["외상", "의식저하", "심정지"],
   "길잃음": ["길 잃음", "체력 저하", "저체온증", "탈수", "의식저하"],
   "체력저하": ["체력 저하", "의식저하", "저혈당"],
-  "장비문제": ["골절·열상", "실족·추락", "체력 저하"],
+  "장비문제": ["골절" 열상", "실족" "추락", "체력저하"],
   "동물": ["벌 쏘임", "뱀 물림", "야생동물 공격"]
 };
 
