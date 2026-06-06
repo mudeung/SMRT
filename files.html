@@ -147,120 +147,119 @@ button:active {
 const SUPABASE_URL = "https://rwabtimwveqewhbkvjna.supabase.co";
 const SUPABASE_ANON_KEY = "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InJ3YWJ0aW13dmVxZXdoYmt2am5hIiwicm9sZSI6ImFub24iLCJpYXQiOjE3ODA3MzAyNjEsImV4cCI6MjA5NjMwNjI2MX0.YbJ3pd_3KrttjMwBlRu8zDoLwulfOz-3AONCObkZ8U4";
 
+
 const client = supabase.createClient(SUPABASE_URL, SUPABASE_ANON_KEY);
 
 /* =========================
-   CREATE
+   CREATE POST
 ========================= */
-document.getElementById("createBtn").addEventListener("click", async () => {
+document.getElementById("createBtn").onclick = async () => {
   const title = document.getElementById("title").value;
   const content = document.getElementById("content").value;
   const file = document.getElementById("file").files[0];
 
   let fileUrl = null;
 
-  try {
-    if (file) {
-      const fileName = Date.now() + "_" + file.name;
+  if (file) {
+    const fileName = Date.now() + "_" + file.name;
 
-      const { error: uploadError } = await client
-        .storage
-        .from("uploads")
-        .upload(fileName, file);
+    const { error: uploadError } = await client.storage
+      .from("uploads")
+      .upload(fileName, file);
 
-      if (uploadError) return alert(uploadError.message);
+    if (uploadError) return alert(uploadError.message);
 
-      const { data } = client
-        .storage
-        .from("uploads")
-        .getPublicUrl(fileName);
+    const { data } = client.storage
+      .from("uploads")
+      .getPublicUrl(fileName);
 
-      fileUrl = data.publicUrl;
-    }
-
-    const { error } = await client
-      .from("posts")
-      .insert([{ title, content, file_url: fileUrl }]);
-
-    if (error) return alert(error.message);
-
-    loadPosts();
-
-  } catch (e) {
-    alert("에러 발생");
-    console.error(e);
+    fileUrl = data.publicUrl;
   }
-});
+
+  await client.from("posts").insert([
+    { title, content, file_url: fileUrl }
+  ]);
+
+  loadPosts();
+};
 
 /* =========================
-   READ
+   LOAD POSTS
 ========================= */
 async function loadPosts() {
-  const { data, error } = await client
+  const { data: posts } = await client
     .from("posts")
     .select("*")
     .order("created_at", { ascending: false });
 
-  if (error) return console.error(error);
-
   const container = document.getElementById("posts");
   container.innerHTML = "";
 
-  data.forEach(post => {
+  for (const post of posts) {
     const div = document.createElement("div");
     div.className = "post";
 
-    const title = document.createElement("h4");
-    title.textContent = post.title;
+    div.innerHTML = `
+      <h3>${post.title}</h3>
+      <p>${post.content}</p>
+      ${post.file_url ? `<a href="${post.file_url}" target="_blank">파일 다운로드</a>` : ""}
+    `;
 
-    const content = document.createElement("p");
-    content.textContent = post.content;
+    // 댓글 영역
+    const commentBox = document.createElement("div");
+    commentBox.className = "comment-box";
 
-    const btnWrap = document.createElement("div");
+    const input = document.createElement("input");
+    input.placeholder = "댓글 작성";
 
-    const editBtn = document.createElement("button");
-    editBtn.textContent = "수정";
-    editBtn.onclick = async () => {
-      const newTitle = prompt("제목", post.title);
-      const newContent = prompt("내용", post.content);
+    const btn = document.createElement("button");
+    btn.textContent = "댓글";
 
-      if (!newTitle || !newContent) return;
+    const list = document.createElement("div");
 
-      await client.from("posts")
-        .update({ title: newTitle, content: newContent })
-        .eq("id", post.id);
+    btn.onclick = async () => {
+      if (!input.value) return;
 
+      await client.from("comments").insert([
+        {
+          post_id: post.id,
+          content: input.value
+        }
+      ]);
+
+      input.value = "";
       loadPosts();
     };
 
-    const delBtn = document.createElement("button");
-    delBtn.textContent = "삭제";
-    delBtn.onclick = async () => {
-      if (!confirm("삭제?")) return;
+    commentBox.appendChild(input);
+    commentBox.appendChild(btn);
+    commentBox.appendChild(list);
 
-      await client.from("posts")
-        .delete()
-        .eq("id", post.id);
+    div.appendChild(commentBox);
 
-      loadPosts();
-    };
+    container.appendChild(div);
 
-    btnWrap.appendChild(editBtn);
-    btnWrap.appendChild(delBtn);
+    // 댓글 로드
+    loadComments(post.id, list);
+  }
+}
 
-    div.appendChild(title);
-    div.appendChild(content);
+/* =========================
+   LOAD COMMENTS
+========================= */
+async function loadComments(postId, container) {
+  const { data } = await client
+    .from("comments")
+    .select("*")
+    .eq("post_id", postId)
+    .order("created_at", { ascending: true });
 
-    if (post.file_url) {
-      const downloadBtn = document.createElement("a");
-      downloadBtn.href = post.file_url;
-      downloadBtn.textContent = "⬇ 다운로드";
-      downloadBtn.target = "_blank";
-      downloadBtn.download = "";
-      div.appendChild(downloadBtn);
-    }
+  container.innerHTML = "";
 
-    div.appendChild(btnWrap);
+  data.forEach(c => {
+    const div = document.createElement("div");
+    div.className = "comment";
+    div.textContent = c.content;
     container.appendChild(div);
   });
 }
