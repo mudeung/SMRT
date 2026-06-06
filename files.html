@@ -245,7 +245,7 @@ accidentCause.addEventListener("change", () => {
 /* ================= 공유 텍스트 ================= */
 function buildShareText(post) {
   return `
-[산악사고 출동기록]
+[사고기록]
 시간: ${new Date(post.created_at).toLocaleString()}
 유형: ${post.accident_type}
 위치: ${post.location}
@@ -262,7 +262,7 @@ async function shareNative(post) {
 
   if (navigator.share) {
     await navigator.share({
-      title: "산악사고 출동기록",
+      title: "사고기록",
       text
     });
   } else {
