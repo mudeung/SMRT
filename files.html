@@ -89,6 +89,8 @@ button {
     </select>
 
     <input id="accidentLocation" placeholder="사고 위치" />
+    <input id="patientCondition" placeholder="환자 상태 (예: 골절, 의식저하, 심정지)" />
+  
   </div>
 
   <div class="card">
@@ -139,6 +141,7 @@ const client = supabase.createClient(SUPABASE_URL, SUPABASE_ANON_KEY);
 const accidentCause = document.getElementById("accidentCause");
 const accidentType = document.getElementById("accidentType");
 const locationInput = document.getElementById("accidentLocation");
+const patientCondition = document.getElementById("patientCondition");
 
 const patientName = document.getElementById("patientName");
 const birth = document.getElementById("birth");
@@ -260,24 +263,25 @@ document.getElementById("createBtn").onclick = async () => {
       fileUrl = data.publicUrl;
     }
 
-    const payload = {
-      accident_type: accidentType.value,
-      location: locationInput.value,
-      content: `
+const payload = {
+  accident_type: accidentType.value,
+  location: locationInput.value,
+  content: `
 [환자]
 이름: ${patientName.value}
 생년월일: ${birth.value}
 주소: ${address.value}
 연락처: ${phone.value}
+상태: ${patientCondition.value}
 
 [응급처치]
 ${treatment.value}
 
 [출동대원]
 ${rescueTeam.value}
-      `.trim(),
-      file_url: fileUrl
-    };
+  `.trim(),
+  file_url: fileUrl
+};
 
     const { error } = await client.from("posts").insert([payload]);
     if (error) throw error;
@@ -295,6 +299,7 @@ function resetForm() {
   accidentCause.value = "";
   accidentType.innerHTML = `<option value="">사고유형</option>`;
   locationInput.value = "";
+  patientCondition.value = "";
   patientName.value = "";
   birth.value = "";
   address.value = "";
