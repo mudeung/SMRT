@@ -47,10 +47,12 @@ button {
   color: white;
   cursor: pointer;
   width: 100%;
+  margin-top: 5px;
 }
 
 .delete-btn { background: #d9534f; }
 .edit-btn { background: #10b981; }
+.sms-btn { background: #f59e0b; }
 
 .post {
   background: white;
@@ -59,7 +61,12 @@ button {
   border-radius: 10px;
 }
 
-.time { font-size: 12px; color: gray; }
+.time { font-size: 12px; color: gray; margin-bottom: 6px; }
+
+@media (max-width: 768px) {
+  .layout { flex-direction: column; }
+  .left, .right { width: 100%; flex: unset; }
+}
 </style>
 </head>
 
@@ -73,7 +80,6 @@ button {
   <div class="card">
     <h3>🚑 산악사고 출동기록</h3>
 
-    <!-- 사고원인 -->
     <select id="accidentCause">
       <option value="">사고원인</option>
       <option value="실족">실족·추락</option>
@@ -85,55 +91,12 @@ button {
       <option value="동물">동물/곤충</option>
     </select>
 
-    <!-- 사고유형 -->
     <select id="accidentType">
       <option value="">사고유형</option>
-
-      <optgroup label="질환">
-        <option value="심정지">심정지</option>
-        <option value="흉통">흉통</option>
-        <option value="호흡곤란">호흡곤란</option>
-        <option value="뇌졸중 의심">뇌졸중 의심</option>
-        <option value="경련">경련</option>
-        <option value="의식저하">의식저하</option>
-        <option value="저혈당">저혈당</option>
-        <option value="고혈당">고혈당</option>
-      </optgroup>
-
-        <optgroup label="외상">
-        <option value="실족·추락">실족·추락</option>
-        <option value="낙석">낙석</option>
-        <option value="미끄러짐">미끄러짐</option>
-        <option value="충돌(나무, 바위 등)">충돌(나무, 바위 등)</option>
-        <option value="절단·열상">골절·열상</option>
-        <option value="등산장비 손상">등산장비 손상</option>
-      </optgroup>
-
-      <optgroup label="환경">
-        <option value="저체온증">저체온증</option>
-        <option value="열탈진">열탈진</option>
-        <option value="열사병">열사병</option>
-        <option value="탈수">탈수</option>
-        <option value="동상">동상</option>
-        <option value="번개 손상">번개 손상</option>
-      </optgroup>
-
-      <optgroup label="조난">
-        <option value="길 잃음">길 잃음</option>
-        <option value="야간 고립">야간 고립</option>
-        <option value="체력 고갈">체력 저하</option>
-        <option value="장비 부족">장비 부족</option>
-      </optgroup>
-
-      <optgroup label="동물">
-        <option value="벌 쏘임">벌 쏘임</option>
-        <option value="뱀 물림">뱀 물림</option>
-        <option value="야생동물 공격">야생동물 공격</option>
-      </optgroup>
     </select>
 
-<input id="accidentLocation" placeholder="사고 위치" />
-<input id="patientStatus" placeholder="환자 상태" />
+    <input id="accidentLocation" placeholder="사고 위치" />
+    <input id="patientStatus" placeholder="환자 상태" />
   </div>
 
   <div class="card">
@@ -163,6 +126,7 @@ button {
 
 </div>
 
+<!-- ================= RIGHT ================= -->
 <div class="right">
   <div id="posts"></div>
 </div>
@@ -174,6 +138,7 @@ button {
 <script>
 const SUPABASE_URL = "https://rwabtimwveqewhbkvjna.supabase.co";
 const SUPABASE_ANON_KEY = "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InJ3YWJ0aW13dmVxZXdoYmt2am5hIiwicm9sZSI6ImFub24iLCJpYXQiOjE3ODA3MzAyNjEsImV4cCI6MjA5NjMwNjI2MX0.YbJ3pd_3KrttjMwBlRu8zDoLwulfOz-3AONCObkZ8U4";
+
 
 const client = supabase.createClient(SUPABASE_URL, SUPABASE_ANON_KEY);
 
@@ -208,21 +173,36 @@ const accidentMap = {
 accidentCause.addEventListener("change", () => {
   const allowed = accidentMap[accidentCause.value] || [];
 
-  accidentType.querySelectorAll("option").forEach(opt => {
-    if (!opt.value) return;
-    opt.style.display =
-      allowed.length === 0 || allowed.includes(opt.value)
-        ? ""
-        : "none";
-  });
+  accidentType.innerHTML = `<option value="">사고유형</option>`;
 
-  accidentType.value = "";
+  allowed.forEach(v => {
+    const opt = document.createElement("option");
+    opt.value = v;
+    opt.textContent = v;
+    accidentType.appendChild(opt);
+  });
 });
+
+/* ================= 문자 공유 ================= */
+function shareSMS(post) {
+  const text = `
+[출동기록]
+유형: ${post.accident_type}
+위치: ${post.location}
+시간: ${new Date(post.created_at).toLocaleString()}
+
+[내용]
+${post.content}
+  `.trim();
+
+  const encoded = encodeURIComponent(text);
+  window.location.href = `sms:?body=${encoded}`;
+}
 
 /* ================= 폼 초기화 ================= */
 function resetForm() {
   accidentCause.value = "";
-  accidentType.value = "";
+  accidentType.innerHTML = `<option value="">사고유형</option>`;
   locationInput.value = "";
 
   patientName.value = "";
@@ -241,7 +221,6 @@ document.getElementById("createBtn").onclick = async () => {
     const file = fileInput.files[0];
     let fileUrl = null;
 
-    /* ---- 파일 업로드 ---- */
     if (file) {
       const fileName = `${Date.now()}_${file.name}`;
 
@@ -258,7 +237,6 @@ document.getElementById("createBtn").onclick = async () => {
       fileUrl = data.publicUrl;
     }
 
-    /* ---- payload ---- */
     const payload = {
       accident_type: accidentType.value,
       location: locationInput.value,
@@ -282,26 +260,20 @@ ${rescueTeam.value}
 
     if (error) throw error;
 
-    resetForm();     // ✅ 저장 후 초기화
-    loadPosts();     // 새로고침
+    resetForm();
+    loadPosts();
 
   } catch (err) {
-    console.error(err);
-    alert("저장 실패: " + err.message);
+    alert(err.message);
   }
 };
 
 /* ================= LOAD ================= */
 async function loadPosts() {
-  const { data, error } = await client
+  const { data } = await client
     .from("posts")
     .select("*")
     .order("created_at", { ascending: false });
-
-  if (error) {
-    console.error(error);
-    return;
-  }
 
   postsContainer.innerHTML = "";
 
@@ -317,7 +289,7 @@ async function loadPosts() {
       ${post.file_url ? `<a href="${post.file_url}" target="_blank">파일</a>` : ""}
     `;
 
-    /* ---- 수정 ---- */
+    /* 수정 */
     const edit = document.createElement("button");
     edit.textContent = "수정";
     edit.className = "edit-btn";
@@ -329,8 +301,7 @@ async function loadPosts() {
 
       if (!newType || !newLoc) return;
 
-      const { error } = await client
-        .from("posts")
+      await client.from("posts")
         .update({
           accident_type: newType,
           location: newLoc,
@@ -338,37 +309,39 @@ async function loadPosts() {
         })
         .eq("id", post.id);
 
-      if (error) return alert(error.message);
-
       loadPosts();
     };
 
-    /* ---- 삭제 ---- */
+    /* 삭제 */
     const del = document.createElement("button");
     del.textContent = "삭제";
     del.className = "delete-btn";
 
     del.onclick = async () => {
-      if (!confirm("삭제할까요?")) return;
+      if (!confirm("삭제?")) return;
 
-      const { error } = await client
-        .from("posts")
+      await client.from("posts")
         .delete()
         .eq("id", post.id);
-
-      if (error) return alert(error.message);
 
       loadPosts();
     };
 
+    /* 문자 */
+    const sms = document.createElement("button");
+    sms.textContent = "공유";
+    sms.className = "sms-btn";
+
+    sms.onclick = () => shareSMS(post);
+
     div.appendChild(edit);
     div.appendChild(del);
+    div.appendChild(sms);
 
     postsContainer.appendChild(div);
   });
 }
 
-/* ================= INIT ================= */
 loadPosts();
 </script>
 
