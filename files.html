@@ -309,82 +309,55 @@ async function deletePost(post) {
   loadPosts();
 }
 
-/* ================= CREATE (SAFE VERSION) ================= */
+/* ================= CREATE ================= */
 document.getElementById("createBtn").onclick = async () => {
   try {
     const file = fileInput.files[0];
     let fileUrl = null;
 
-    // 1. 파일 업로드 처리
     if (file) {
+      const fileName = `${Date.now()}_${file.name}`;
 
-      // ✔ 파일 타입 제한 (중요)
-      const allowedTypes = ["image/", "application/pdf"];
-
-      if (!allowedTypes.some(type => file.type.startsWith(type))) {
-        alert("이미지 또는 PDF만 업로드 가능합니다.");
-        return;
-      }
-
-      // ✔ 파일명 안전하게 정리
-      const safeFileName = `${Date.now()}_${file.name.replace(/[^a-zA-Z0-9.]/g, "_")}`;
-
-      // ✔ 업로드
-      const { error: uploadError } = await client.storage
+      const { error } = await client.storage
         .from("uploads")
-        .upload(safeFileName, file);
+        .upload(fileName, file);
 
-      if (uploadError) throw uploadError;
+      if (error) throw error;
 
-      // ✔ 공개 URL 생성
       const { data } = client.storage
         .from("uploads")
-        .getPublicUrl(safeFileName);
+        .getPublicUrl(fileName);
 
       fileUrl = data.publicUrl;
     }
 
-    // 2. 입력 검증 (최소 필수 체크)
-    if (!accidentType.value || !locationInput.value) {
-      alert("사고 유형과 위치는 필수입니다.");
-      return;
-    }
-
-    // 3. payload 생성
     const payload = {
       accident_type: accidentType.value,
       location: locationInput.value,
       content: `
 [환자]
-이름: ${patientName.value || "-"}
-생년월일: ${birth.value || "-"}
-주소: ${address.value || "-"}
-연락처: ${phone.value || "-"}
+이름: ${patientName.value}
+생년월일: ${birth.value}
+주소: ${address.value}
+연락처: ${phone.value}
 
 [응급처치]
-${treatment.value || "-"}
+${treatment.value}
 
 [출동대원]
-${rescueTeam.value || "-"}
+${rescueTeam.value}
       `.trim(),
       file_url: fileUrl
     };
 
-    // 4. DB 저장
-    const { error } = await client
-      .from("posts")
-      .insert([payload]);
-
+    const { error } = await client.from("posts").insert([payload]);
     if (error) throw error;
 
-    // 5. 성공 후 처리
-    alert("저장 완료");
     resetForm();
     loadPosts();
 
   } catch (err) {
-    console.error(err);
-    alert(err.message || "저장 실패");
+    alert(err.message);
   }
 };
 
@@ -404,47 +377,24 @@ function resetForm() {
 
 /* ================= LOAD ================= */
 async function loadPosts() {
-  const { data, error } = await client
+  const { data } = await client
     .from("posts")
-    .select("id, accident_type, location, content, created_at")
+    .select("*")
     .order("created_at", { ascending: false });
 
-  if (error) {
-    console.error(error);
-    alert("데이터 불러오기 실패");
-    return;
-  }
-
-  if (!data) return;
-
   postsContainer.innerHTML = "";
-
-  const fragment = document.createDocumentFragment();
 
   data.forEach(post => {
     const div = document.createElement("div");
     div.className = "post";
 
-    // 제목
-    const title = document.createElement("h3");
-    title.textContent = post.accident_type || "-";
+    div.innerHTML = `
+      <h3>${post.accident_type || "-"}</h3>
+      <div class="time">📍 ${post.location || "-"}</div>
+      <div class="time">🕒 ${new Date(post.created_at).toLocaleString()}</div>
+      <pre style="white-space:pre-wrap;">${post.content || ""}</pre>
+    `;
 
-    // 위치
-    const loc = document.createElement("div");
-    loc.className = "time";
-    loc.textContent = `📍 ${post.location || "-"}`;
-
-    // 시간
-    const time = document.createElement("div");
-    time.className = "time";
-    time.textContent = `🕒 ${new Date(post.created_at).toLocaleString()}`;
-
-    // 내용
-    const content = document.createElement("pre");
-    content.style.whiteSpace = "pre-wrap";
-    content.textContent = post.content || "";
-
-    // 버튼들
     const copyBtn = document.createElement("button");
     copyBtn.textContent = "복사";
     copyBtn.onclick = () => copy(post);
@@ -463,22 +413,16 @@ async function loadPosts() {
     delBtn.className = "delete-btn";
     delBtn.onclick = () => deletePost(post);
 
-    // 조립
-    div.appendChild(title);
-    div.appendChild(loc);
-    div.appendChild(time);
-    div.appendChild(content);
-
     div.appendChild(copyBtn);
     div.appendChild(shareBtn);
     div.appendChild(editBtn);
     div.appendChild(delBtn);
 
-    fragment.appendChild(div);
+    postsContainer.appendChild(div);
   });
-
-  postsContainer.appendChild(fragment);
 }
+
+loadPosts();
 </script>
 
 </body>
