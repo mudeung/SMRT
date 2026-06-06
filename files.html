@@ -246,7 +246,7 @@ function buildShareText(post) {
 시간: ${new Date(post.created_at).toLocaleString()}
 유형: ${post.accident_type || "-"}
 위치: ${post.location || "-"}
-상태: ${post.patient_condition || "-"}
+상태: ${post.patient_info?.condition || "-"}
 
 [요구조자]
 ${post.content || ""}
@@ -333,11 +333,10 @@ document.getElementById("createBtn").onclick = async () => {
       fileUrl = data.publicUrl;
     }
 
-    const payload = {
-      accident_type: accidentType.value,
-      location: locationInput.value,
-      patient_condition: patientCondition.value,
-      content: `
+  const payload = {
+  accident_type: accidentType.value,
+  location: locationInput.value,
+  content: `
 [인적사항]
 이름: ${patientName.value}
 생년월일: ${birth.value}
@@ -349,19 +348,20 @@ ${treatment.value}
 
 [출동대원]
 ${rescueTeam.value}
-      `.trim(),
-      file_url: fileUrl
-    };
+  `.trim(),
 
-    const { error } = await client.from("posts").insert([payload]);
-    if (error) throw error;
+  file_url: fileUrl,
 
-    resetForm();
-    loadPosts();
+  patient_info: {
+    name: patientName.value,
+    birth: birth.value,
+    address: address.value,
+    phone: phone.value,
+    condition: patientCondition.value
+  },
 
-  } catch (err) {
-    alert(err.message);
-  }
+  treatment: treatment.value,
+  rescue_team: rescueTeam.value
 };
 
 /* reset */
