@@ -2,13 +2,16 @@
 <html lang="ko">
 <head>
 <meta charset="UTF-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1.0"/>
 <title>Supabase 안정 게시판</title>
+
 <style>
 body {
   font-family: Arial, sans-serif;
+  width: 100%;
   max-width: 600px;
   margin: 0 auto;
-  padding: 16px;
+  padding: 12px;
   background: #f7f7f7;
 }
 
@@ -66,12 +69,18 @@ button:active {
   line-height: 1.4;
 }
 
+.post div {
+  display: flex;
+  gap: 6px;
+  flex-wrap: wrap;
+}
+
 .post button {
   width: auto;
   padding: 8px 10px;
   font-size: 14px;
-  margin-right: 6px;
   background: #555;
+  margin-right: 6px;
 }
 
 .post button:last-child {
@@ -82,6 +91,39 @@ button:active {
   display: inline-block;
   margin-top: 8px;
   font-size: 14px;
+  padding: 5px 10px;
+  border: 1px solid #ccc;
+  text-decoration: none;
+  border-radius: 6px;
+}
+
+/* 📱 모바일 최적화 */
+@media (max-width: 480px) {
+  body {
+    padding: 10px;
+  }
+
+  h2 {
+    font-size: 20px;
+  }
+
+  input, textarea {
+    font-size: 15px;
+    padding: 12px;
+  }
+
+  button {
+    font-size: 15px;
+    padding: 12px;
+  }
+
+  .post {
+    padding: 12px;
+  }
+
+  .post button {
+    width: 48%;
+  }
 }
 </style>
 </head>
@@ -93,7 +135,7 @@ button:active {
 <input id="title" placeholder="산악사고 위치작성" />
 <textarea id="content" placeholder="이름;성별;주소;연락처;응급처치 내용"></textarea>
 <input type="file" id="file" />
-<button id="createBtn">적성내용 저장</button>
+<button id="createBtn">저장</button>
 
 <hr />
 
@@ -210,23 +252,15 @@ async function loadPosts() {
     div.appendChild(content);
 
     if (post.file_url) {
-  const downloadBtn = document.createElement("a");
-  downloadBtn.href = post.file_url;
-  downloadBtn.textContent = "⬇ 다운로드";
-  downloadBtn.target = "_blank";
-  downloadBtn.download = "";
-
-  downloadBtn.style.display = "inline-block";
-  downloadBtn.style.marginTop = "5px";
-  downloadBtn.style.padding = "5px 10px";
-  downloadBtn.style.border = "1px solid #ccc";
-  downloadBtn.style.textDecoration = "none";
-
-  div.appendChild(downloadBtn);
-}
+      const downloadBtn = document.createElement("a");
+      downloadBtn.href = post.file_url;
+      downloadBtn.textContent = "⬇ 다운로드";
+      downloadBtn.target = "_blank";
+      downloadBtn.download = "";
+      div.appendChild(downloadBtn);
+    }
 
     div.appendChild(btnWrap);
-
     container.appendChild(div);
   });
 }
