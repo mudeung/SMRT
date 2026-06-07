@@ -194,9 +194,13 @@ button {
 
 <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
 
+<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+
 <script>
 const SUPABASE_URL = "https://rwabtimwveqewhbkvjna.supabase.co";
 const SUPABASE_ANON_KEY = "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InJ3YWJ0aW13dmVxZXdoYmt2am5hIiwicm9sZSI6ImFub24iLCJpYXQiOjE3ODA3MzAyNjEsImV4cCI6MjA5NjMwNjI2MX0.YbJ3pd_3KrttjMwBlRu8zDoLwulfOz-3AONCObkZ8U4";
+
+const GOOGLE_SCRIPT_URL = "https://script.google.com/macros/s/AKfycbxw5ShljcFHHWnCcK7sTGFDV9hbpzChj7GyfH2OcsXGrPlSzzoydHP5MllmWORZ0O4J/exec";
 
 const client = supabase.createClient(SUPABASE_URL, SUPABASE_ANON_KEY);
 
@@ -217,21 +221,22 @@ const fileInput = document.getElementById("file");
 
 const postsContainer = document.getElementById("posts");
 
-/* ================= 사고 매핑 ================= */
+/* 사고 매핑 */
 const accidentMap = {
-  "추락": ["외상", "골절", "열상", "의식저하", "심정지"],
-  "미끄러짐": ["찰과상", "통증", "골절", "열상", "허리통증"],
-  "낙석": ["외상", "의식저하", "심정지"],
-  "길잃음": ["조난", "체력저하", "저체온증", "탈수", "의식저하"],
-  "무리한산행": ["다리경련", "체력저하", "탈수", "의식저하", "저혈당", "심정지"],
-  "장비문제": ["실족", "열상", "골절", "추락", "체력저하"],
-  "동물": ["벌 쏘임", "뱀 물림", "야생동물 공격"]
+  "추락": ["외상","골절","열상","의식저하","심정지"],
+  "미끄러짐": ["찰과상","통증","골절","열상","허리통증"],
+  "낙석": ["외상","의식저하","심정지"],
+  "길잃음": ["조난","체력저하","저체온증","탈수","의식저하"],
+  "무리한산행": ["다리경련","체력저하","탈수","의식저하","저혈당","심정지"],
+  "장비문제": ["실족","열상","골절","추락","체력저하"],
+  "동물": ["벌 쏘임","뱀 물림","야생동물 공격"]
 };
 
 accidentCause.addEventListener("change", () => {
-  const allowed = accidentMap[accidentCause.value] || [];
-  accidentType.innerHTML = `<option value="">사고유형</option>`;
-  allowed.forEach(v => {
+  const list = accidentMap[accidentCause.value] || [];
+  accidentType.innerHTML = '<option value="">사고유형</option>';
+
+  list.forEach(v => {
     const opt = document.createElement("option");
     opt.value = v;
     opt.textContent = v;
@@ -240,119 +245,105 @@ accidentCause.addEventListener("change", () => {
 });
 
 /* 공유 텍스트 */
-function buildShareText(post) {
+function buildText(post) {
   return `
-[무등산]
+[산악사고]
+
 시간: ${new Date(post.created_at).toLocaleString()}
 위치: ${post.location || "-"}
 사고유형: ${post.accident_type || "-"}
 환자상태: ${post.patient_info?.condition || "-"}
 
-[요구조자]
+[내용]
 ${post.content || ""}
-  `.trim();
-}
-
-/* 공유 */
-async function shareNative(post) {
-  const text = buildShareText(post);
-
-  try {
-    if (navigator.share) {
-      await navigator.share({
-        title: `산악사고 - ${post.accident_type}`,
-        text
-      });
-    } else {
-      await navigator.clipboard.writeText(text);
-      alert("복사 완료");
-    }
-  } catch (e) {
-    console.error(e);
-  }
+`.trim();
 }
 
 /* 복사 */
 async function copy(post) {
-  await navigator.clipboard.writeText(buildShareText(post));
+  await navigator.clipboard.writeText(buildText(post));
   alert("복사 완료");
 }
 
-/* 수정 */
-async function editPost(post) {
-  const newType = prompt("유형", post.accident_type);
-  const newLoc = prompt("위치", post.location);
-  const newCondition = prompt("환자 상태", post.patient_condition);
-  const newContent = prompt("내용", post.content);
+/* 공유 */
+async function share(post) {
+  const text = buildText(post);
 
-  if (!newType || !newLoc) return;
-
-  await client.from("posts")
-    .update({
-      accident_type: newType,
-      location: newLoc,
-      patient_condition: newCondition,
-      content: newContent
-    })
-    .eq("id", post.id);
-
-  loadPosts();
+  if (navigator.share) {
+    await navigator.share({ title: "산악사고", text });
+  } else {
+    await navigator.clipboard.writeText(text);
+    alert("복사 완료");
+  }
 }
 
 /* 삭제 */
 async function deletePost(post) {
   if (!confirm("삭제?")) return;
 
-  await client.from("posts")
-    .delete()
+  await client.from("posts").delete().eq("id", post.id);
+  loadPosts();
+}
+
+/* 수정 */
+async function editPost(post) {
+  const location = prompt("위치", post.location);
+  const type = prompt("사고유형", post.accident_type);
+  const content = prompt("내용", post.content);
+
+  if (!location || !type) return;
+
+  await client
+    .from("posts")
+    .update({
+      location,
+      accident_type: type,
+      content
+    })
     .eq("id", post.id);
 
   loadPosts();
 }
 
-/* 생성 */
+/* 저장 (안정화 버전) */
 document.getElementById("createBtn").onclick = async () => {
   try {
-    const file = fileInput.files[0];
+    // -------------------------
+    // 1️⃣ 파일 업로드
+    // -------------------------
     let fileUrl = null;
-
-    // 파일 업로드
+    const file = fileInput.files[0];
     if (file) {
-      const fileName = `${Date.now()}_${file.name}`;
-
+      const fileName = Date.now() + "_" + file.name;
       const { error: uploadError } = await client.storage
         .from("uploads")
         .upload(fileName, file);
 
       if (uploadError) throw uploadError;
 
-      const { data: urlData } = client.storage
+      const { data } = client.storage
         .from("uploads")
         .getPublicUrl(fileName);
 
-      fileUrl = urlData.publicUrl;
+      fileUrl = data.publicUrl;
     }
 
-    // 게시물 payload
+    // -------------------------
+    // 2️⃣ Supabase payload 준비
+    // -------------------------
     const payload = {
       accident_type: accidentType.value,
       location: locationInput.value,
       content: `
-[인적사항]
 이름: ${patientName.value}
 생년월일: ${birth.value}
-거주지: ${address.value}
+주소: ${address.value}
 연락처: ${phone.value}
 
-[응급처치]
-${treatment.value}
-
-[출동대원]
-${rescueTeam.value}
+응급처치: ${treatment.value}
+대원: ${rescueTeam.value}
       `.trim(),
-
       file_url: fileUrl,
-
       patient_info: {
         name: patientName.value,
         birth: birth.value,
@@ -360,49 +351,85 @@ ${rescueTeam.value}
         phone: phone.value,
         condition: patientCondition.value
       },
-
       treatment: treatment.value,
       rescue_team: rescueTeam.value
     };
 
-    // DB에 삽입
-    const { error: insertError } = await client.from("posts").insert([payload]);
-    if (insertError) throw insertError;
+    // -------------------------
+    // 3️⃣ Supabase 저장
+    // -------------------------
+    const { data, error } = await client
+      .from("posts")
+      .insert([payload])
+      .select()
+      .single();
 
-    resetForm();   // 폼 초기화
-    loadPosts();   // 새로고침
+    if (error) throw error;
+
+    console.log("Supabase 저장 완료:", data.id);
+
+    // -------------------------
+    // 4️⃣ Google Sheet 백업
+    // -------------------------
+    // 실패해도 앱 흐름 중단 X
+    try {
+      fetch(GOOGLE_SCRIPT_URL, {
+        method: "POST",
+        mode: "no-cors",
+        headers: { "Content-Type": "text/plain" },
+        body: JSON.stringify({
+          id: data.id,
+          accident_type: data.accident_type,
+          location: data.location,
+          patient_info: data.patient_info,
+          treatment: data.treatment,
+          rescue_team: data.rescue_team,
+          file_url: data.file_url
+        })
+      });
+      console.log("Sheet 전송 요청 완료 (응답 확인 불가)");
+    } catch (sheetErr) {
+      console.warn("Sheet 요청 실패, Supabase는 성공", sheetErr);
+      // ✅ 필요 시 재시도 로직을 여기서 추가 가능
+    }
+
+    // -------------------------
+    // 5️⃣ 폼 초기화 및 게시글 로드
+    // -------------------------
+    resetForm();
+    loadPosts();
+
+    alert("저장이 완료되었습니다! ✅");
 
   } catch (err) {
-    alert(err.message);
+    alert("저장 실패: " + err.message);
+    console.error("저장 중 에러:", err);
   }
 };
-
-/* reset */
-function resetForm() {
-  accidentCause.value = "";
-  accidentType.innerHTML = `<option value="">사고유형</option>`;
-  locationInput.value = "";
-  patientCondition.value = "";
-  patientName.value = "";
-  birth.value = "";
-  address.value = "";
-  phone.value = "";
-  treatment.value = "";
-  rescueTeam.value = "";
-  fileInput.value = "";
-}
-
-/* load */
+  
+/*구글시트 안정화*/
+async function backupToSheet(data) {
+  try {
+    await fetch(GOOGLE_SCRIPT_URL, {
+      method: "POST",
+      mode: "no-cors", // CORS 문제 방지
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify(data)
+    });
+    console.log("Google Sheet backup triggered.");
+  } catch (err) {
+    console.warn("Google Sheet backup failed, but Supabase saved the data:", err);
+  }
+}  
+  
+/* 로드 */
 async function loadPosts() {
   const { data, error } = await client
     .from("posts")
     .select("*")
     .order("created_at", { ascending: false });
 
-  if (error) {
-    console.error(error);
-    return;
-  }
+  if (error) return console.error(error);
 
   postsContainer.innerHTML = "";
 
@@ -414,7 +441,7 @@ async function loadPosts() {
       <h3>${post.accident_type || "-"}</h3>
       <div class="time">📍 ${post.location || "-"}</div>
       <div class="time">🕒 ${new Date(post.created_at).toLocaleString()}</div>
-      <pre style="white-space:pre-wrap;">${post.content || ""}</pre>
+      <pre>${post.content || ""}</pre>
     `;
 
     const copyBtn = document.createElement("button");
@@ -423,16 +450,14 @@ async function loadPosts() {
 
     const shareBtn = document.createElement("button");
     shareBtn.textContent = "공유";
-    shareBtn.onclick = () => shareNative(post);
+    shareBtn.onclick = () => share(post);
 
     const editBtn = document.createElement("button");
     editBtn.textContent = "수정";
-    editBtn.className = "edit-btn";
     editBtn.onclick = () => editPost(post);
 
     const delBtn = document.createElement("button");
     delBtn.textContent = "삭제";
-    delBtn.className = "delete-btn";
     delBtn.onclick = () => deletePost(post);
 
     div.append(copyBtn, shareBtn, editBtn, delBtn);
@@ -440,7 +465,127 @@ async function loadPosts() {
   });
 }
 
+/* 초기 실행 */
 loadPosts();
+
+/* reset */
+function resetForm() {
+  accidentCause.value = "";
+  accidentType.innerHTML = '<option value="">사고유형</option>';
+  locationInput.value = "";
+  patientCondition.value = "";
+  patientName.value = "";
+  birth.value = "";
+  address.value = "";
+  phone.value = "";
+  treatment.value = "";
+  rescueTeam.value = "";
+  fileInput.value = "";
+}
+  
+const SHEET_QUEUE_KEY = "sheet_queue";
+
+// 큐에 저장
+function enqueueSheet(data) {
+  const queue = JSON.parse(localStorage.getItem(SHEET_QUEUE_KEY) || "[]");
+  queue.push(data);
+  localStorage.setItem(SHEET_QUEUE_KEY, JSON.stringify(queue));
+}
+
+// 큐에서 제거
+function dequeueSheet(index) {
+  const queue = JSON.parse(localStorage.getItem(SHEET_QUEUE_KEY) || "[]");
+  queue.splice(index, 1);
+  localStorage.setItem(SHEET_QUEUE_KEY, JSON.stringify(queue));
+}
+
+// Sheet 전송 (재시도 포함)
+async function sendToSheet(payload) {
+  try {
+    await fetch(GOOGLE_SCRIPT_URL, {
+      method: "POST",
+      mode: "no-cors", // 응답은 확인 못함
+      headers: { "Content-Type": "text/plain" },
+      body: JSON.stringify(payload)
+    });
+    console.log("Sheet 전송 요청 완료");
+    return true;
+  } catch (err) {
+    console.warn("Sheet 전송 실패, 큐에 저장", err);
+    enqueueSheet(payload);
+    return false;
+  }
+}
+
+// 큐 재시도 함수
+async function processSheetQueue() {
+  const queue = JSON.parse(localStorage.getItem(SHEET_QUEUE_KEY) || "[]");
+  for (let i = queue.length - 1; i >= 0; i--) {
+    const success = await sendToSheet(queue[i]);
+    if (success) {
+      dequeueSheet(i);
+    }
+  }
+}
+
+// 일정 주기 재시도 (30초마다)
+setInterval(processSheetQueue, 30000);
+
+// 저장 버튼 클릭
+document.getElementById("createBtn").onclick = async () => {
+  try {
+    // 1️⃣ 파일 처리
+    let fileUrl = null;
+    const file = fileInput.files[0];
+    if (file) {
+      const fileName = Date.now() + "_" + file.name;
+      const { error: uploadError } = await client.storage.from("uploads").upload(fileName, file);
+      if (uploadError) throw uploadError;
+      const { data } = client.storage.from("uploads").getPublicUrl(fileName);
+      fileUrl = data.publicUrl;
+    }
+
+    // 2️⃣ Supabase payload
+    const payload = {
+      accident_type: accidentType.value,
+      location: locationInput.value,
+      content: `이름: ${patientName.value}\n생년월일: ${birth.value}\n주소: ${address.value}\n연락처: ${phone.value}\n응급처치: ${treatment.value}\n대원: ${rescueTeam.value}`.trim(),
+      file_url: fileUrl,
+      patient_info: {
+        name: patientName.value,
+        birth: birth.value,
+        address: address.value,
+        phone: phone.value,
+        condition: patientCondition.value
+      },
+      treatment: treatment.value,
+      rescue_team: rescueTeam.value
+    };
+
+    // 3️⃣ Supabase 저장
+    const { data, error } = await client.from("posts").insert([payload]).select().single();
+    if (error) throw error;
+    console.log("Supabase 저장 완료:", data.id);
+
+    // 4️⃣ Sheet 저장 시도
+    await sendToSheet({
+      id: data.id,
+      accident_type: data.accident_type,
+      location: data.location,
+      patient_info: data.patient_info,
+      treatment: data.treatment,
+      rescue_team: data.rescue_team,
+      file_url: data.file_url
+    });
+
+    resetForm();
+    loadPosts();
+
+  } catch (err) {
+    alert(err.message);
+    console.error(err);
+  }
+};  
 </script>
 
 </body>
