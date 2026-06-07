@@ -1,0 +1,447 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+<meta charset="UTF-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+<title>📝 출동기록 시스템</title>
+
+<style>
+body {
+  font-family: Arial;
+  margin: 0;
+  padding: 10px;
+  background: #f7f7f7;
+  display: flex;
+  justify-content: center;
+  height: 100vh;
+  overflow: hidden;
+}
+
+/* 전체 레이아웃 */
+.layout {
+  display: flex;
+  gap: 12px;
+  width: 100%;
+  height: 100%;
+}
+
+/* 입력 영역 */
+.left {
+  flex: 4;
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+  overflow-y: auto;
+  max-height: 100vh;
+  padding-right: 4px;
+}
+
+/* 기록 영역 */
+.right {
+  flex: 6;
+  display: flex;
+  flex-direction: column;
+  overflow-y: auto;
+  max-height: 100vh;
+  padding-right: 5px;
+}
+
+/* 카드 */
+.card {
+  background: white;
+  padding: 12px;
+  border-radius: 12px;
+}
+
+/* 입력 요소 */
+input,
+textarea,
+select {
+  width: 100%;
+  padding: 10px;
+  margin-bottom: 8px;
+  border-radius: 8px;
+  border: 1px solid #ddd;
+  box-sizing: border-box;
+}
+
+/* 버튼 */
+button {
+  padding: 10px;
+  border: none;
+  border-radius: 8px;
+  background: #2d6cdf;
+  color: white;
+  cursor: pointer;
+  width: 100%;
+  margin-top: 5px;
+}
+
+/* 버튼 색상 */
+.delete-btn {
+  background: #d9534f;
+}
+
+.edit-btn {
+  background: #10b981;
+}
+
+/* 기록 카드 */
+.post {
+  background: white;
+  padding: 10px;
+  margin-bottom: 10px;
+  border-radius: 10px;
+  font-size: 14px;
+  line-height: 1.4;
+}
+
+/* 시간 표시 */
+.time {
+  font-size: 12px;
+  color: gray;
+  margin-bottom: 6px;
+}
+
+/* PC에서 최신 강조 */
+.post:first-child {
+  border: 2px solid #2d6cdf;
+}
+
+/* 모바일 대응 */
+@media (max-width: 768px) {
+  body {
+    height: auto;
+    overflow: auto;
+  }
+
+  .layout {
+    flex-direction: column;
+    height: auto;
+  }
+
+  .left,
+  .right {
+    max-height: none;
+    overflow: visible;
+  }
+}
+</style>
+</head>
+
+<body>
+
+<div class="layout">
+
+<!-- LEFT -->
+<div class="left">
+
+  <div class="card">
+    <h3>📝 산악사고 기록지</h3>
+
+    <select id="accidentCause">
+      <option value="">사고원인</option>
+      <option value="추락">추락</option>
+      <option value="미끄러짐">미끄러짐</option>
+      <option value="낙석">낙석</option>
+      <option value="길잃음">길잃음</option>
+      <option value="무리한산행">무리한산행</option>
+      <option value="장비문제">장비손상</option>
+      <option value="동물">동물/곤충</option>
+    </select>
+
+    <select id="accidentType">
+      <option value="">사고유형</option>
+    </select>
+
+    <input id="accidentLocation" placeholder="사고 위치" />
+    <input id="patientCondition" placeholder="환자 상태" />
+  </div>
+
+  <div class="card">
+    <h3>환자정보</h3>
+    <input id="patientName" placeholder="이름" />
+    <input id="birth" type="date" />
+    <input id="address" placeholder="거주지" />
+    <input id="phone" placeholder="연락처" />
+  </div>
+
+  <div class="card">
+    <h3>응급처치</h3>
+    <textarea id="treatment"></textarea>
+  </div>
+
+  <div class="card">
+    <h3>출동대원</h3>
+    <input id="rescueTeam" placeholder="대원 이름" />
+  </div>
+
+  <div class="card">
+    <h3>파일</h3>
+    <input type="file" id="file" />
+  </div>
+
+  <button id="createBtn">저장</button>
+
+</div>
+
+<!-- RIGHT -->
+<div class="right">
+  <div id="posts"></div>
+</div>
+
+</div>
+
+<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+
+<script>
+const SUPABASE_URL = "https://rwabtimwveqewhbkvjna.supabase.co";
+const SUPABASE_ANON_KEY = "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InJ3YWJ0aW13dmVxZXdoYmt2am5hIiwicm9sZSI6ImFub24iLCJpYXQiOjE3ODA3MzAyNjEsImV4cCI6MjA5NjMwNjI2MX0.YbJ3pd_3KrttjMwBlRu8zDoLwulfOz-3AONCObkZ8U4";
+
+const client = supabase.createClient(SUPABASE_URL, SUPABASE_ANON_KEY);
+
+/* DOM */
+const accidentCause = document.getElementById("accidentCause");
+const accidentType = document.getElementById("accidentType");
+const locationInput = document.getElementById("accidentLocation");
+const patientCondition = document.getElementById("patientCondition");
+
+const patientName = document.getElementById("patientName");
+const birth = document.getElementById("birth");
+const address = document.getElementById("address");
+const phone = document.getElementById("phone");
+
+const treatment = document.getElementById("treatment");
+const rescueTeam = document.getElementById("rescueTeam");
+const fileInput = document.getElementById("file");
+
+const postsContainer = document.getElementById("posts");
+
+/* ================= 사고 매핑 ================= */
+const accidentMap = {
+  "추락": ["외상", "골절", "열상", "의식저하", "심정지"],
+  "미끄러짐": ["찰과상", "통증", "골절", "열상", "허리통증"],
+  "낙석": ["외상", "의식저하", "심정지"],
+  "길잃음": ["조난", "체력저하", "저체온증", "탈수", "의식저하"],
+  "무리한산행": ["다리경련", "체력저하", "탈수", "의식저하", "저혈당", "심정지"],
+  "장비문제": ["실족", "열상", "골절", "추락", "체력저하"],
+  "동물": ["벌 쏘임", "뱀 물림", "야생동물 공격"]
+};
+
+accidentCause.addEventListener("change", () => {
+  const allowed = accidentMap[accidentCause.value] || [];
+  accidentType.innerHTML = `<option value="">사고유형</option>`;
+  allowed.forEach(v => {
+    const opt = document.createElement("option");
+    opt.value = v;
+    opt.textContent = v;
+    accidentType.appendChild(opt);
+  });
+});
+
+/* 공유 텍스트 */
+function buildShareText(post) {
+  return `
+[무등산]
+시간: ${new Date(post.created_at).toLocaleString()}
+위치: ${post.location || "-"}
+사고유형: ${post.accident_type || "-"}
+환자상태: ${post.patient_info?.condition || "-"}
+
+[요구조자]
+${post.content || ""}
+  `.trim();
+}
+
+/* 공유 */
+async function shareNative(post) {
+  const text = buildShareText(post);
+
+  try {
+    if (navigator.share) {
+      await navigator.share({
+        title: `산악사고 - ${post.accident_type}`,
+        text
+      });
+    } else {
+      await navigator.clipboard.writeText(text);
+      alert("복사 완료");
+    }
+  } catch (e) {
+    console.error(e);
+  }
+}
+
+/* 복사 */
+async function copy(post) {
+  await navigator.clipboard.writeText(buildShareText(post));
+  alert("복사 완료");
+}
+
+/* 수정 */
+async function editPost(post) {
+  const newType = prompt("유형", post.accident_type);
+  const newLoc = prompt("위치", post.location);
+  const newCondition = prompt("환자 상태", post.patient_condition);
+  const newContent = prompt("내용", post.content);
+
+  if (!newType || !newLoc) return;
+
+  await client.from("posts")
+    .update({
+      accident_type: newType,
+      location: newLoc,
+      patient_condition: newCondition,
+      content: newContent
+    })
+    .eq("id", post.id);
+
+  loadPosts();
+}
+
+/* 삭제 */
+async function deletePost(post) {
+  if (!confirm("삭제?")) return;
+
+  await client.from("posts")
+    .delete()
+    .eq("id", post.id);
+
+  loadPosts();
+}
+
+/* 생성 */
+document.getElementById("createBtn").onclick = async () => {
+  try {
+    const file = fileInput.files[0];
+    let fileUrl = null;
+
+    // 파일 업로드
+    if (file) {
+      const fileName = `${Date.now()}_${file.name}`;
+
+      const { error: uploadError } = await client.storage
+        .from("uploads")
+        .upload(fileName, file);
+
+      if (uploadError) throw uploadError;
+
+      const { data: urlData } = client.storage
+        .from("uploads")
+        .getPublicUrl(fileName);
+
+      fileUrl = urlData.publicUrl;
+    }
+
+    // 게시물 payload
+    const payload = {
+      accident_type: accidentType.value,
+      location: locationInput.value,
+      content: `
+[인적사항]
+이름: ${patientName.value}
+생년월일: ${birth.value}
+거주지: ${address.value}
+연락처: ${phone.value}
+
+[응급처치]
+${treatment.value}
+
+[출동대원]
+${rescueTeam.value}
+      `.trim(),
+
+      file_url: fileUrl,
+
+      patient_info: {
+        name: patientName.value,
+        birth: birth.value,
+        address: address.value,
+        phone: phone.value,
+        condition: patientCondition.value
+      },
+
+      treatment: treatment.value,
+      rescue_team: rescueTeam.value
+    };
+
+    // DB에 삽입
+    const { error: insertError } = await client.from("posts").insert([payload]);
+    if (insertError) throw insertError;
+
+    resetForm();   // 폼 초기화
+    loadPosts();   // 새로고침
+
+  } catch (err) {
+    alert(err.message);
+  }
+};
+
+/* reset */
+function resetForm() {
+  accidentCause.value = "";
+  accidentType.innerHTML = `<option value="">사고유형</option>`;
+  locationInput.value = "";
+  patientCondition.value = "";
+  patientName.value = "";
+  birth.value = "";
+  address.value = "";
+  phone.value = "";
+  treatment.value = "";
+  rescueTeam.value = "";
+  fileInput.value = "";
+}
+
+/* load */
+async function loadPosts() {
+  const { data, error } = await client
+    .from("posts")
+    .select("*")
+    .order("created_at", { ascending: false });
+
+  if (error) {
+    console.error(error);
+    return;
+  }
+
+  postsContainer.innerHTML = "";
+
+  data.forEach(post => {
+    const div = document.createElement("div");
+    div.className = "post";
+
+    div.innerHTML = `
+      <h3>${post.accident_type || "-"}</h3>
+      <div class="time">📍 ${post.location || "-"}</div>
+      <div class="time">🕒 ${new Date(post.created_at).toLocaleString()}</div>
+      <pre style="white-space:pre-wrap;">${post.content || ""}</pre>
+    `;
+
+    const copyBtn = document.createElement("button");
+    copyBtn.textContent = "복사";
+    copyBtn.onclick = () => copy(post);
+
+    const shareBtn = document.createElement("button");
+    shareBtn.textContent = "공유";
+    shareBtn.onclick = () => shareNative(post);
+
+    const editBtn = document.createElement("button");
+    editBtn.textContent = "수정";
+    editBtn.className = "edit-btn";
+    editBtn.onclick = () => editPost(post);
+
+    const delBtn = document.createElement("button");
+    delBtn.textContent = "삭제";
+    delBtn.className = "delete-btn";
+    delBtn.onclick = () => deletePost(post);
+
+    div.append(copyBtn, shareBtn, editBtn, delBtn);
+    postsContainer.appendChild(div);
+  });
+}
+
+loadPosts();
+</script>
+
+</body>
+</html>
