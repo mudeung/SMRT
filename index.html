@@ -214,7 +214,13 @@ src="https://calendar.google.com/calendar/embed?src=35f4e5ad17b2ce6c5ae379ff9dda
 </div>
 
 
-<script src="https://dapi.kakao.com/v2/maps/sdk.js?appkey=ff9e145029506d6e4c72d1f2b01ea424"></script>
+<script src="https://dapi.kakao.com/v2/maps/sdk.js?appkey=ff9e145029506d6e4c72d1f2b01ea424&autoload=false"></script>
+
+<script>
+kakao.maps.load(function () {
+    initMap();
+});
+</script>
 
 <script>
 /* ================= API 설정 ================= */
