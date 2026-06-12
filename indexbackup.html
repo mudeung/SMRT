@@ -4,13 +4,15 @@
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
 <title>🩺 무등산국립공원 특수산악구조대</title>
-
+<link rel="manifest" href="manifest.json">
+<meta name="theme-color" content="#0b4f2f">
+    
 <style>
 *{margin:0;padding:0;box-sizing:border-box;font-family:'Malgun Gothic', sans-serif;}
 body{background:#f4f6f8;color:#333;}
 header{
     background:linear-gradient(rgba(0,0,0,0.5),rgba(0,0,0,0.5)),
-    url('https://images.unsplash.com/photo-1464822759023-fed622ff2c3b?auto=format&fit=crop&w=1600&q=80');
+    url('https://mudeung.github.io/SMRT/무등산_서석대.jpg');
     background-size:cover;
     background-position:center;
     height:30vh;
@@ -66,8 +68,8 @@ tr:hover { background-color: #f1f3f5; cursor: pointer; }
 <nav>
 <a href="#mainPage">Home</a>
 <a href="#rescue">사고현황</a> 
-<a href="#mission">상황판</a>
 <a href="#calendar">일정공유</a>
+<a href="#mission">게시판</a>
 <a href="#notice">업무공지</a>
 <a href="#contact">유관기관</a>
 </nav>
@@ -75,12 +77,17 @@ tr:hover { background-color: #f1f3f5; cursor: pointer; }
 <div id="noticePreview" style="padding: 20px 10% 0 10%;"></div>  
 
 <div class="today-box" style="margin: 20px 10% 0 10%;">
-  <h3>📌 오늘 일정</h3>
+  <h3>📌 특수구조팀 오늘 일정</h3>
   <div id="todaySchedule"></div>
 </div> 
 
+<br>
+    <br>
+        <br>
+           <br>
+    
 <section id="rescue">
-  <h2 class="section-title">🚨 실시간 사고현황</h2>
+<h2 class="section-title">🚨 무등산 실시간 산악사고 현황</h2>
   <div id="map"></div>
   
   <div id="listArea" style="display:none;"></div>
@@ -102,43 +109,11 @@ tr:hover { background-color: #f1f3f5; cursor: pointer; }
 <audio id="alertSound">
   <source src="https://actions.google.com/sounds/v1/alarms/alarm_clock.ogg">
 </audio>
-
-<section id="mission">
-<h2 class="section-title">상황판</h2>
-<div class="card">
-    <h3>🚑 구조출동 상황판</h3>
-    <p>산악사고 신고/접수/대응 상황판</p>
-    <button onclick="window.open('https://mudeung.github.io/rescue/callems1.html','_blank')">바로가기</button>
-</div>
-<div class="card">
-    <h3>🆘 산악사고 신고접수</h3>
-    <p>실시간 신고접수</p>
-    <button onclick="window.open('https://mudeung.github.io/rescue/callems.html','_blank')">바로가기</button>
-</div>
-<div class="card">
-    <h3>📍 실시간 위치 공유시스템</h3>
-    <p>구조대원 실시간 위치확인</p>
-    <button onclick="window.open('https://mudeung.github.io/rescue/gpsgps.html','_blank')">바로가기</button>
-</div>
-
-<div class="card">
-    <h3>📁 공유자료</h3>
-    <p>공유자료</p>
-    <button onclick="window.open('https://drive.google.com/drive/folders/1sie1wSv_dGcZhO7aEieDjNj-yH4fKj_L','_blank')">파일 공유</button>
-</div>
-
-<div class="card">
-    <h3>📁 상황실 점검일지</h3>
-    <p>일일 점검일지 파일 업로드</p>
-    <button onclick="window.open('https://mudeung.github.io/SMRT/files.html','_blank')">파일 공유</button>
-</div>
-</section>    
     
-</section>
-
-
+ 
+<section id="rescue">
 <section id="calendar">
-<h2 class="section-title">일정공유</h2>
+<h2 class="section-title">📒 교육/훈련/행사/일정 공유</h2>
 <div class="calendar-wrap">
 <iframe
 src="https://calendar.google.com/calendar/embed?src=35f4e5ad17b2ce6c5ae379ff9dda889a46f1ee7928c82efdc9668a596da889fb%40group.calendar.google.com&ctz=Asia/Seoul&hl=ko">
@@ -146,8 +121,49 @@ src="https://calendar.google.com/calendar/embed?src=35f4e5ad17b2ce6c5ae379ff9dda
 </div>
 </section>
 
+<section id="mission">
+<h2 class="section-title">📚 특수산악구조팀 게시판</h2>
+
+    <div class="card">
+    <h3>🚨 119 재난상황 정보</h3>
+    <p>국민안전24 재난상황 정보</p>
+    <button onclick="window.open('https://www.safekorea.go.kr/safekorea-kor/ctim/csim/fireInfo.do','_blank')">바로가기</button>
+</div>
+   
+ <div class="card">
+    <h3>🆘 무등산 산악사고 신고접수</h3>
+    <p>실시간 산악사고 신고접수</p>
+    <button onclick="window.open('https://mudeung.github.io/rescue/callems.html','_blank')">바로가기</button>
+</div>
+
+    <div class="card">
+    <h3>📝 무등산 산악사고 기록지 게시판</h3>
+    <p>산악사고 원인/유형/응급처치 기록</p>
+    <button onclick="window.open('https://mudeung.github.io/SMRT/files.html','_blank')">파일 공유</button>
+</div>    
+
+    <div class="card">
+    <h3>📍 특수구조팀 실시간 위치공유</h3>
+    <p>구조대원 실시간 위치확인</p>
+    <button onclick="window.open('https://mudeung.github.io/rescue/gpsgps.html','_blank')">바로가기</button>
+</div>
+
+    <div class="card">
+    <h3>📂 특수산악구조팀 자료</h3>
+    <p>산악사고/구조출동/업무자료 공유</p>
+    <button onclick="window.open('https://drive.google.com/drive/folders/1sie1wSv_dGcZhO7aEieDjNj-yH4fKj_L','_blank')">파일 공유</button>
+</div>
+
+    <div class="card">
+    <h3>🏷️ 특수산악구조팀 게시판</h3>
+    <p>게시판 글 작성 및 점검일지 등 공유</p>
+    <button onclick="window.open('https://mudeung.github.io/SMRT/file.html','_blank')">파일 공유</button>
+</div>
+</section>    
+    
+   
 <section id="notice">
-<h2 class="section-title">업무공지</h2>
+<h2 class="section-title">🔖 중요업무 공지</h2>
 
 <div class="card">
 <input id="noticeTitle" placeholder="제목" style="width:100%;padding:10px;">
@@ -160,8 +176,9 @@ src="https://calendar.google.com/calendar/embed?src=35f4e5ad17b2ce6c5ae379ff9dda
 <div id="noticeList"></div>
 </section>
 
+   
 <section id="contact">
-<h2 class="section-title">유관기관</h2>
+<h2 class="section-title">📞 유관기관 연락처</h2>
 
 <div class="card">
     <p><strong>무등산 재난안전상황실: 062-230-2043 / FAX 062-230-2099 / 무등산 동부 재난안전상황실: 061-370-5733</strong></p>
@@ -172,6 +189,7 @@ src="https://calendar.google.com/calendar/embed?src=35f4e5ad17b2ce6c5ae379ff9dda
     <p><strong>119산악구조대 사무실: 062-606-4791 / 119산악구조대 업무폰: 010-8002-0860</strong></p>
 </div>
 </section>
+
 
 <footer>
 © 2026 무등산국립공원 특수산악구조대는 산악사고, 조난자 구조, 응급처치, 수색 활동을 수행하며 24시간 대응체계를 유지하고 있습니다.
@@ -194,6 +212,7 @@ src="https://calendar.google.com/calendar/embed?src=35f4e5ad17b2ce6c5ae379ff9dda
     <button onclick="closeModal()" style="width:100%; margin-top:15px;">닫기</button>
   </div>
 </div>
+
 
 <script src="https://dapi.kakao.com/v2/maps/sdk.js?appkey=ff9e145029506d6e4c72d1f2b01ea424"></script>
 
