@@ -225,25 +225,55 @@ const RESCUE_API = "https://script.google.com/macros/s/AKfycbwUbacHm34YkWh--zL_e
 let map, markers = [], allData = [];
 
 /* ===== LOGIN 기능 ===== */
-function login() {
+async function login() {
+
     const id = document.getElementById("userid").value;
     const pw = document.getElementById("password").value;
 
-    if (id === "rescue" && pw === "knps") {
-        sessionStorage.setItem("login", "ok");
+    try {
 
-        document.getElementById("loginPage").style.display = "none";
-        document.getElementById("mainPage").style.display = "block";
+        const res = await fetch(NOTICE_API, {
+            method: "POST",
+            headers: {
+                "Content-Type": "text/plain"
+            },
+            body: JSON.stringify({
+                mode: "login",
+                id: id,
+                pw: pw
+            })
+        });
 
-        initMap();
-        loadNotice();
-        loadTodaySchedule();
-        loadData(); 
-    } else {
-        document.getElementById("loginMsg").textContent = "로그인 실패";
+        const result = await res.json();
+
+        if (result.success) {
+
+            sessionStorage.setItem("login", "ok");
+
+            document.getElementById("loginPage").style.display = "none";
+            document.getElementById("mainPage").style.display = "block";
+
+            initMap();
+            loadNotice();
+            loadTodaySchedule();
+            loadData();
+
+        } else {
+
+            document.getElementById("loginMsg").textContent =
+                "로그인 실패";
+
+        }
+
+    } catch (err) {
+
+        console.error(err);
+
+        document.getElementById("loginMsg").textContent =
+            "서버 연결 실패";
+
     }
 }
-
 /* ===== MAP 초기화 ===== */
 function initMap() {
     if (map) return; 
