@@ -214,7 +214,8 @@ src="https://calendar.google.com/calendar/embed?src=35f4e5ad17b2ce6c5ae379ff9dda
 </div>
 
 
-<script src="https://dapi.kakao.com/v2/maps/sdk.js?appkey=ff9e145029506d6e4c72d1f2b01ea424"></script>
+<script src="https://dapi.kakao.com/v2/maps/sdk.js?appkey=ff9e145029506d6e4c72d1f2b01ea424&autoload=false"></script>
+
 
 <script>
 /* ================= API 설정 ================= */
@@ -225,25 +226,55 @@ const RESCUE_API = "https://script.google.com/macros/s/AKfycbwUbacHm34YkWh--zL_e
 let map, markers = [], allData = [];
 
 /* ===== LOGIN 기능 ===== */
-function login() {
+async function login() {
+
     const id = document.getElementById("userid").value;
     const pw = document.getElementById("password").value;
 
-    if (id === "rescue" && pw === "knps") {
-        sessionStorage.setItem("login", "ok");
+    try {
 
-        document.getElementById("loginPage").style.display = "none";
-        document.getElementById("mainPage").style.display = "block";
+        const res = await fetch(NOTICE_API, {
+            method: "POST",
+            headers: {
+                "Content-Type": "text/plain"
+            },
+            body: JSON.stringify({
+                mode: "login",
+                id: id,
+                pw: pw
+            })
+        });
 
-        initMap();
-        loadNotice();
-        loadTodaySchedule();
-        loadData(); 
-    } else {
-        document.getElementById("loginMsg").textContent = "로그인 실패";
+        const result = await res.json();
+
+        if (result.success) {
+
+            sessionStorage.setItem("login", "ok");
+
+            document.getElementById("loginPage").style.display = "none";
+            document.getElementById("mainPage").style.display = "block";
+
+            initMap();
+            loadNotice();
+            loadTodaySchedule();
+            loadData();
+
+        } else {
+
+            document.getElementById("loginMsg").textContent =
+                "로그인 실패";
+
+        }
+
+    } catch (err) {
+
+        console.error(err);
+
+        document.getElementById("loginMsg").textContent =
+            "서버 연결 실패";
+
     }
 }
-
 /* ===== MAP 초기화 ===== */
 function initMap() {
     if (map) return; 
@@ -529,16 +560,19 @@ async function loadTodaySchedule() {
 
 /* ===== 초기 구동 브라우저 로드 이벤트 통합 ===== */
 window.addEventListener("load", () => {
-    if (sessionStorage.getItem("login") === "ok") {
-        document.getElementById("loginPage").style.display = "none";
-        document.getElementById("mainPage").style.display = "block";
-        initMap();
-        loadNotice();
-        loadTodaySchedule();
-        loadData();
-    } else {
-        loadTodaySchedule(); 
-    }
+    kakao.maps.load(function () {
+        if (sessionStorage.getItem("login") === "ok") {
+            document.getElementById("loginPage").style.display = "none";
+            document.getElementById("mainPage").style.display = "block";
+
+            initMap();
+            loadNotice();
+            loadTodaySchedule();
+            loadData();
+        } else {
+            loadTodaySchedule();
+        }
+    });
 });
 
 /* ===== 실시간 데이터 갱신 (15초 주기) ===== */
