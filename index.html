@@ -560,16 +560,19 @@ async function loadTodaySchedule() {
 
 /* ===== 초기 구동 브라우저 로드 이벤트 통합 ===== */
 window.addEventListener("load", () => {
-    if (sessionStorage.getItem("login") === "ok") {
-        document.getElementById("loginPage").style.display = "none";
-        document.getElementById("mainPage").style.display = "block";
-        initMap();
-        loadNotice();
-        loadTodaySchedule();
-        loadData();
-    } else {
-        loadTodaySchedule(); 
-    }
+    kakao.maps.load(function () {
+        if (sessionStorage.getItem("login") === "ok") {
+            document.getElementById("loginPage").style.display = "none";
+            document.getElementById("mainPage").style.display = "block";
+
+            initMap();
+            loadNotice();
+            loadTodaySchedule();
+            loadData();
+        } else {
+            loadTodaySchedule();
+        }
+    });
 });
 
 /* ===== 실시간 데이터 갱신 (15초 주기) ===== */
