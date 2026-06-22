@@ -590,6 +590,15 @@ window.addEventListener("load", () => {
 
 /* ===== 실시간 데이터 갱신 (15초 주기) ===== */
 setInterval(loadData, 15000); 
+
+
+/* ===== 바탕화면 아이콘 ===== */    
+if ("serviceWorker" in navigator) {
+  navigator.serviceWorker.register("./sw.js")
+    .then(() => console.log("SW 등록 완료"))
+    .catch(err => console.error(err));
+}
+    
 </script>
 </body>
 </html>
