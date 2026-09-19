@@ -445,18 +445,85 @@ async function saveNotice() {
     
 /* ===== RESCUE DATA (사고 현황) 기능 ===== */
 async function loadData() {
-    if (sessionStorage.getItem("login") !== "ok") return;
+
+    if (sessionStorage.getItem("login") !== "ok") {
+        return;
+    }
 
     try {
-        const res = await fetch(RESCUE_API + "?t=" + Date.now());
-        let data = await res.json();
-        if (!Array.isArray(data)) data = [];
-        allData = data;
+
+        const res = await fetch(
+            RESCUE_API +
+            "?action=list&t=" +
+            Date.now()
+        );
+
+        if (!res.ok) {
+            throw new Error(
+                "HTTP 오류: " + res.status
+            );
+        }
+
+        const data = await res.json();
+
+        if (!Array.isArray(data)) {
+            console.error(
+                "사고현황 데이터 형식 오류:",
+                data
+            );
+            allData = [];
+        } else {
+            allData = data;
+        }
+
         renderData(allData);
+
     } catch (err) {
-        console.error("사고현황 로드 실패:", err);
+
+        console.error(
+            "사고현황 로드 실패:",
+            err
+        );
+
+        const tbody =
+            document.querySelector(
+                "#sheetTable tbody"
+            );
+
+        if (tbody) {
+
+            tbody.innerHTML = `
+                <tr>
+                    <td colspan="6"
+                        style="padding:20px;color:#c0392b;">
+                        산악사고 데이터를 불러오지 못했습니다.
+                    </td>
+                </tr>
+            `;
+
+        }
     }
 }
+
+function getStatusText(status) {
+
+    switch (String(status || "").toUpperCase()) {
+
+        case "RECEIVED":
+            return "접수";
+
+        case "ARRIVED":
+            return "현장도착";
+
+        case "DONE":
+            return "구조완료";
+
+        default:
+            return status || "대기";
+    }
+}
+
+    
 
 function renderData(data) {
     document.getElementById("listArea").innerHTML = "";
@@ -508,7 +575,23 @@ function renderTable(data){
             <td style="text-align:left;">${item.address || '위치 미정'}</td>
             <td>${item.phone || '-'}</td>
             <td style="text-align:left;">${item.symptom || '-'}</td>
-            <td><span style="background:#0b4f2f; color:#fff; padding:2px 6px; border-radius:4px; font-size:12px;">${item.status || '대기'}</span></td>
+           <td>
+    <span style="
+        background:${
+            item.status === "DONE"
+                ? "#555"
+                : item.status === "ARRIVED"
+                    ? "#e67e22"
+                    : "#0b4f2f"
+        };
+        color:#fff;
+        padding:4px 8px;
+        border-radius:4px;
+        font-size:12px;">
+        ${getStatusText(item.status)}
+    </span>
+</td>
+
         `;
         tbody.appendChild(tr);
     });
